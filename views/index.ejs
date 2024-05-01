@@ -1,0 +1,21 @@
+<%- include('partials/header') -%>
+
+<% if (locals.isAuthenticated) { %>
+<div class="flex justify-center items-center">
+  <div class="bg-white px-8 pt-6 pb-8 mb-4">
+    <h1 class="text-2xl mb-4">Benvenuto!</h1>
+    <p class="text-base mb-4">Sei loggato con successo.</p>
+    <a href="/profile" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Visualizza il tuo profilo</a>
+  </div>
+</div>
+<% } else { %>
+<div class="flex justify-center items-center">
+  <div class="bg-white px-8 pt-6 pb-8 mb-4">
+    <h1 class="text-2xl mb-4">Accesso Richiesto</h1>
+    <p class="text-base mb-4">Devi effettuare l'accesso per poter accedere a questo sito.</p>
+    <a href="/login" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Accedi</a>
+  </div>
+</div>
+<% } %>
+
+<%- include('partials/footer') -%>
