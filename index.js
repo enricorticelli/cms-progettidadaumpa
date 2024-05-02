@@ -3,6 +3,7 @@ const http = require('http');
 const logger = require('morgan');
 const path = require('path');
 const router = require('./routes/router');
+const bodyParser = require('body-parser');
 const { auth } = require('express-openid-connect');
 
 require("dotenv").config();
@@ -17,6 +18,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/artisti', express.static(path.join(__dirname, 'public')));
 
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 const port = process.env.PORT || 8080;
 
