@@ -1,4 +1,3 @@
-const dotenv = require('dotenv');
 const express = require('express');
 const http = require('http');
 const logger = require('morgan');
@@ -6,7 +5,7 @@ const path = require('path');
 const router = require('./routes/index');
 const { auth } = require('express-openid-connect');
 
-dotenv.config();
+require("dotenv").config();
 
 const app = express();
 
@@ -15,7 +14,6 @@ app.set('view engine', 'ejs');
 
 app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'node_modules')));
 app.use(express.json());
 
 const config = {
@@ -23,7 +21,7 @@ const config = {
   auth0Logout: true
 };
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 if (
   !config.baseURL &&
   !process.env.BASE_URL &&
