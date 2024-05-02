@@ -14,7 +14,6 @@ router.get('/', requiresAuth(), async function (req, res, next) {
     
     const result = await client.query(`SELECT * FROM artisti;`);
 
-    const artistData = result.rows;
     const sortedArtistData = result.rows.sort((a, b) => new Date(b.data_modifica) - new Date(a.data_modifica));
 
     res.render('artisti', {
@@ -150,6 +149,30 @@ router.delete('/:codice', requiresAuth(), async function (req, res, next) {
   } catch (err) {
     console.error('Errore durante l\'eliminazione dell\'artista:', err);
     res.status(500).send('Errore durante l\'eliminazione dell\'artista');
+  }
+});
+
+router.post('/toggle/:codice', requiresAuth(), async function (req, res, next) {
+  const codice = req.params.codice;
+  const attivo = req.body.attivo;
+
+  try {
+    const client = await pool.connect();
+
+    const updateResult = await client.query(`
+      UPDATE artisti 
+      SET attivo = $1 
+      WHERE codice = $2;
+    `, [attivo, codice]);
+
+    console.log("Stato 'attivo' dell'artista aggiornato con successo");
+
+    res.sendStatus(204); // Risposta di successo senza contenuto
+
+    client.release();
+  } catch (err) {
+    console.error('Errore durante l\'aggiornamento dello stato \'attivo\' dell\'artista:', err);
+    res.status(500).send('Errore durante l\'aggiornamento dello stato \'attivo\' dell\'artista');
   }
 });
 
