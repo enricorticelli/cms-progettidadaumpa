@@ -14,6 +14,8 @@ app.set('view engine', 'ejs');
 
 app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/artisti', express.static(path.join(__dirname, 'public')));
+
 app.use(express.json());
 
 const port = process.env.PORT || 8080;

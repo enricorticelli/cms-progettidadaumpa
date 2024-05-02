@@ -18,6 +18,9 @@
     "flowbite": "^2.3.0",
     "http-errors": "^2.0.0",
     "morgan": "^1.10.0",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
     "tailwindcss": "^3.4.3"
   }
 }
