@@ -12,12 +12,10 @@ router.get('/', requiresAuth(), async function (req, res, next) {
   try {
     const client = await pool.connect();
     
-    const result = await client.query(`SELECT * FROM artisti;`);
-
-    const sortedArtistData = result.rows.sort((a, b) => new Date(b.data_modifica) - new Date(a.data_modifica));
-
+    const result = await client.query(`SELECT * FROM artisti ORDER BY nome;`);
+    
     res.render('artisti', {
-      artisti: sortedArtistData
+      artisti: result.rows
     });
 
     client.release();
@@ -63,20 +61,16 @@ router.get('/:codice', requiresAuth(), async function (req, res, next) {
 
     const trimmedArtistData = {
       id: artistData.id,
-      codice: artistData.codice.trim(),
-      nome: artistData.nome.trim(),
-      sito: artistData.sito.trim().replace(/\s+/g, ' '),
-      descrizione: artistData.descrizione.trim().replace(/\s+/g, ' '),
-      sezione_2: artistData.sezione_2.trim().replace(/\s+/g, ' '),
-      spettacoli: artistData.spettacoli.trim().replace(/\s+/g, ' '),
-      img1: artistData.img1.trim(),
-      img2: artistData.img2.trim(),
-      img3: artistData.img3.trim(),
-      img4: artistData.img4.trim(),
+      codice: artistData.codice ? artistData.codice.trim() : '',
+      nome: artistData.nome ? artistData.nome.trim() : '',
+      sito: artistData.sito ? artistData.sito.trim().replace(/\s+/g, ' ') : '',
+      descrizione: artistData.descrizione ? artistData.descrizione.trim().replace(/\s+/g, ' ') : '',
+      sezione_2: artistData.sezione_2 ? artistData.sezione_2.trim().replace(/\s+/g, ' ') : '',
+      spettacoli: artistData.spettacoli ? artistData.spettacoli.trim().replace(/\s+/g, ' ') : '',
       data_aggiunta: artistData.data_aggiunta,
       data_modifica: artistData.data_modifica
     };
-
+    
     console.log(trimmedArtistData)
 
     res.render('scheda_artista', {
@@ -103,24 +97,24 @@ router.post('/:codice', requiresAuth(), async function (req, res, next) {
     `, [codice]);
 
     if (checkArtist.rows.length === 0) {
-      const cleanedCodice = nome.trim().replace(/\s+/g, '').toLowerCase();
-
+      const cleanedCodice = nome ? nome.trim().replace(/\s+/g, '').toLowerCase() : null;
+    
       const insertResult = await client.query(`
-        INSERT INTO artisti (codice, nome, sito, descrizione, sezione_2, spettacoli, img1, img2, img3, img4, data_aggiunta, data_modifica)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW());
-      `, [cleanedCodice, nome.trim(), sito.trim(), descrizione.trim(), sezione_2.trim(), spettacoli.trim(), img1.trim(), img2.trim(), img3.trim(), img4.trim()]);
+        INSERT INTO artisti (codice, nome, sito, descrizione, sezione_2, spettacoli, data_aggiunta, data_modifica)
+        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW());
+      `, [cleanedCodice, nome ? nome.trim() : null, sito ? sito.trim() : null, descrizione ? descrizione.trim() : null, sezione_2 ? sezione_2.trim() : null, spettacoli ? spettacoli.trim() : null]);
     
       console.log("Artista creato con successo");
     } else {
       // Update existing artist
       const updateResult = await client.query(`
         UPDATE artisti
-        SET nome = $1, sito = $2, descrizione = $3, sezione_2 = $4, spettacoli = $5, img1 = $6, img2 = $7, img3 = $8, img4 = $9, data_modifica = NOW() 
-        WHERE codice = $10
-      `, [nome.trim(), sito.trim(), descrizione.trim(), sezione_2.trim(), spettacoli.trim(), img1.trim(), img2.trim(), img3.trim(), img4.trim(), codice]);
+        SET nome = $1, sito = $2, descrizione = $3, sezione_2 = $4, spettacoli = $5, data_modifica = NOW() 
+        WHERE codice = $6
+      `, [nome ? nome.trim() : null, sito ? sito.trim() : null, descrizione ? descrizione.trim() : null, sezione_2 ? sezione_2.trim() : null, spettacoli ? spettacoli.trim() : null, codice]);
     
       console.log("Artista aggiornato con successo");
-    }
+    }    
 
     res.redirect('/artisti');
 

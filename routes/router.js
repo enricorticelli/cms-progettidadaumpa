@@ -14,7 +14,16 @@ router.get('/profile', requiresAuth(), function (req, res, next) {
 
   res.render('profile', {
     userProfile: JSON.stringify(req.oidc.user, null, 2),
-    title: 'Profile page'
+    title: 'Profile'
+  });
+});
+
+router.get('/immagini', requiresAuth(), function (req, res, next) {
+  console.log(JSON.stringify(req.oidc.user, null, 2))
+
+  res.render('immagini', {
+    userProfile: JSON.stringify(req.oidc.user, null, 2),
+    title: 'Immagini'
   });
 });
 
