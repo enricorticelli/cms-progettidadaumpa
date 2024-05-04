@@ -58,7 +58,7 @@ function filterArtists() {
   // Per ogni riga della tabella, controlla se il nome artista corrisponde alla ricerca
   for (i = 0; i < tr.length; i++) {
     td = tr[i].getElementsByTagName("td")[0]; // La prima cella contiene il nome artista
-    console.log(td)
+    console.log(td);
     if (td) {
       txtValue = td.textContent || td.innerText;
       if (txtValue.toUpperCase().indexOf(filter) > -1) {
@@ -70,7 +70,58 @@ function filterArtists() {
   }
 }
 
-// Aggiungi un event listener per chiamare la funzione di filtro quando si digita nella barra di ricerca
-document
-  .getElementById("simple-search")
-  .addEventListener("keyup", filterArtists);
+document.addEventListener("DOMContentLoaded", function () {
+  // Verifica se siamo sulla pagina corretta prima di associare l'evento
+  if (document.getElementById("simple-search")) {
+    document.getElementById("simple-search").addEventListener("keyup", filterArtists);
+  }
+
+  initializeDropzone();
+  initializeUploadButton();
+});
+
+function initializeDropzone() {
+  const dropzoneFileInput = document.getElementById("dropzone-file");
+  const previewImage = document.getElementById("preview-image");
+
+  dropzoneFileInput.addEventListener("change", function (event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      previewImage.src = event.target.result;
+      previewImage.classList.remove("hidden");
+      document.querySelector(".flex.flex-col.items-center.justify-center.pt-5.pb-6").classList.add("hidden");
+      document.getElementById("upload-button").classList.remove("hidden");
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function initializeUploadButton() {
+  const uploadButton = document.getElementById("upload-button");
+  const dropzoneFileInput = document.getElementById("dropzone-file");
+
+  uploadButton.addEventListener("click", async function () {
+    const file = dropzoneFileInput.files[0];
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("./upload/" + encodeURIComponent(file.name.trim()), {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      console.log("Upload result:", result);
+
+      // Puoi gestire ulteriori azioni dopo l'upload, ad esempio mostrare un messaggio di successo
+    } catch (error) {
+      console.error("Error during upload:", error);
+    }
+  });
+}
