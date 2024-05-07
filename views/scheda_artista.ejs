@@ -110,13 +110,13 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-700 dark:divide-gray-600">
-            <% blobs.forEach(blob => { %>
+            <% files.forEach(file => { %>
             <tr>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-center text-gray-900 dark:text-white"><%= blob.pathname %></div>
+                <div class="text-sm text-center text-gray-900 dark:text-white"><%= file.filename %></div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap flex items-center justify-center">
-                <img src="<%= blob.url %>" alt="<%= blob.pathname %>" class="max-w-full h-auto max-h-24 mx-auto">
+                <img src="<%= file.url %>" alt="<%= file.filename %>" class="max-w-full h-auto max-h-24 mx-auto">
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <button type="button" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">

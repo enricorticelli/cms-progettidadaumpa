@@ -4,9 +4,11 @@ const logger = require("morgan");
 const path = require("path");
 const bodyParser = require("body-parser");
 const { auth } = require("express-openid-connect");
+
 const router = require("./routes/router");
 const artistiRouter = require("./routes/artisti-router");
 const immaginiRouter = require("./routes/immagini-router");
+
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 
@@ -14,7 +16,7 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 const authConfig = {
-  authRequired: false,
+  authRequired: true,
   auth0Logout: true,
   secret: process.env.SECRET,
   baseURL: process.env.BASE_URL,

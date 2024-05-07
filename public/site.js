@@ -3,7 +3,7 @@ function salvaArtistaDaEliminare(value) {
 }
 
 function salvaUrlImmagineDaEliminare(value) {
-  document.getElementById("urlImmagine").value = value;
+  document.getElementById("filename").value = value;
 }
 
 function deleteArtista() {
@@ -180,11 +180,11 @@ function initializeUploadButton(
 }
 
 function deleteImmagine() {
-  var urlImmagine = document.getElementById("urlImmagine").value;
+  var name = document.getElementById("filename").value;
 
   // Costruisci l'oggetto con i dati da inviare nel corpo della richiesta DELETE
   const data = {
-    blobUrl: urlImmagine,
+    filename: name,
   };
 
   // Opzioni della richiesta
