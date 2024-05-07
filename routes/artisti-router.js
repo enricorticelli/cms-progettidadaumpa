@@ -3,6 +3,8 @@ const router = express.Router();
 const { Pool } = require('pg');
 const { requiresAuth } = require('express-openid-connect');
 require("dotenv").config();
+const { getFilesData } = require("./utils");
+
 
 const pool = new Pool({
   connectionString: process.env['POSTGRES_URL'],
@@ -11,9 +13,8 @@ const pool = new Pool({
 router.get('/', requiresAuth(), async function (req, res, next) {
   try {
     const client = await pool.connect();
-    
     const result = await client.query(`SELECT * FROM artisti ORDER BY nome;`);
-    
+
     res.render('artisti', {
       artisti: result.rows
     });
@@ -75,10 +76,12 @@ router.get('/:codice', requiresAuth(), async function (req, res, next) {
       data_modifica: artistData.data_modifica
     };
     
+    const filesData = await getFilesData(res.locals.bucket);
 
     res.render('scheda_artista', {
       editMode: true,
-      artista: trimmedArtistData
+      artista: trimmedArtistData,
+      files: filesData
     });
 
     client.release();

@@ -24,6 +24,32 @@ const authConfig = {
   issuerBaseURL: process.env.ISSUER_BASE_URL,
 };
 
+
+const privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, '\n');
+
+const serviceAccount = {
+  "type": "service_account",
+  "project_id": process.env.PROJECT_ID,
+  "private_key_id": process.env.PRIVATE_KEY_ID,
+  "private_key": privateKey, // Use the processed private key
+  "client_email": process.env.CLIENT_FB_EMAIL,
+  "client_id": process.env.CLIENT_FB_ID,
+  "auth_uri": process.env.AUTH_URI,
+  "token_uri": process.env.TOKEN_URI,
+  "auth_provider_x509_cert_url": process.env.AUTH_PROVIDER_X509_CERT_URL,
+  "client_x509_cert_url": process.env.CLIENT_X509_CERT_URL,
+  "universe_domain": process.env.UNIVERSE_DOMAIN
+};
+
+var admin = require("firebase-admin");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  storageBucket: process.env.BUCKET_URL,
+});
+
+var bucket = admin.storage().bucket();
+
 // Set up Swagger
 const swaggerOptions = {
   definition: {
@@ -61,6 +87,7 @@ app.use(auth(authConfig));
 // Set user data in response locals
 app.use(function (req, res, next) {
   res.locals.user = req.oidc.user;
+  res.locals.bucket = bucket;
   next();
 });
 
