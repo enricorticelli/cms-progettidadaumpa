@@ -9,12 +9,24 @@ require("dotenv").config();
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const { v4: uuidv4 } = require('uuid')
+
 const axios = require('axios');
 const { requiresAuth } = require("express-openid-connect");
 
-const serviceAccount = require("../firebase-service-account.json");
 var admin = require("firebase-admin");
+
+const serviceAccount = {
+  type: process.env.TYPE,
+  project_id: process.env.PROJECT_ID,
+  private_key_id: process.env.PRIVATE_KEY_ID,
+  private_key: process.env.PRIVATE_KEY.replace(/\\n/g, '\n'),
+  client_email: process.env.CLIENT_EMAIL,
+  client_id: process.env.CLIENT_ID,
+  auth_uri: process.env.AUTH_URI,
+  token_uri: process.env.TOKEN_URI,
+  auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_X509_CERT_URL,
+  client_x509_cert_url: process.env.CLIENT_X509_CERT_URL,
+};
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -65,34 +77,16 @@ function formatDate(date) {
 }
 
 router.post("/upload/:filename", requiresAuth(), upload.single("file"), async (req, res) => {
-  const fileName = req.file.originalname;
-  try {
-      const file = bucket.file(fileName);
-      const uploadStream = file.createWriteStream({
-          metadata: {
-              metadata: {
-                  firebaseStorageDownloadTokens: uuidv4()
-              }
-          }
-      });
-
-      uploadStream.on('error', (err) => {
-          console.error('Error uploading file:', err);
-          res.status(500).json({ error: "Internal server error." });
-      });
-
-      uploadStream.on('finish', () => {
-          console.log('File uploaded successfully.');
-          res.status(200).json("done");
-      });
-
-      uploadStream.end(req.file.buffer);
-  } catch (error) {
+    const fileName = req.file.originalname;
+    try {
+      await bucket.file(fileName).createWriteStream().end(req.file.buffer);
+      res.status(200).json("done");
+    } catch (error) {
       console.error(error);
       return res.status(500).json({ error: "Internal server error." });
+    }
   }
-});
-
+);
 
 router.post('/download', async (req, res) => {
   try {
