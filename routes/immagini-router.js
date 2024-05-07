@@ -1,91 +1,112 @@
+/**
+ * @swagger
+ * tags:
+ *   name: Artisti
+ *   description: API per la gestione degli artisti
+ */
+require("dotenv").config();
+
 const express = require("express");
 const router = express.Router();
-const multer = require('multer');
-const { requiresAuth } = require('express-openid-connect');
-const { list } = require('@vercel/blob');
-const { put } = require('@vercel/blob');
-const { del } = require('@vercel/blob');
+const multer = require("multer");
 
-const upload = multer();
+const axios = require('axios');
+const { requiresAuth } = require("express-openid-connect");
 
-router.get('/', requiresAuth(), async function (req, res, next) {
-  try {
-    const result = await list();
-    const blobs = result.blobs.map(blob => {
-      const date = new Date(blob.uploadedAt);
-      const formattedDate = formatDate(date);
-      return { ...blob, uploadedAt: formattedDate };
-    });
+var admin = require("firebase-admin");
 
-    console.log(blobs)
+const serviceAccount = {
+  type: process.env.TYPE,
+  project_id: process.env.PROJECT_ID,
+  private_key_id: process.env.PRIVATE_KEY_ID,
+  private_key: process.env.PRIVATE_KEY.replace(/\\n/g, '\n'), // Replace "\n" with actual new line character
+  client_email: process.env.CLIENT_EMAIL,
+  client_id: process.env.CLIENT_ID,
+  auth_uri: process.env.AUTH_URI,
+  token_uri: process.env.TOKEN_URI,
+  auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_X509_CERT_URL,
+  client_x509_cert_url: process.env.CLIENT_X509_CERT_URL,
+};
 
-    res.render('immagini', { blobs });
-  } catch (error) {
-    console.error('Errore durante il recupero dei blobs:', error);
-    res.status(500).send('Errore durante il recupero dei blobs');
-  }
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  storageBucket: process.env.BUCKET_URL,
 });
 
-router.get('/list/:prefix', requiresAuth(), async function (req, res, next) {
-  const prefix = req.params.prefix;
+var bucket = admin.storage().bucket();
 
+const upload = multer({ storage: multer.memoryStorage() });
+router.get("/", requiresAuth(), async (req, res) => {
   try {
-    const result = await list({
-      prefix: prefix
+    const [files] = await bucket.getFiles();
+
+    if (!files || files.length === 0) {
+      return res.status(404).send("No files found");
+    }
+
+    const filesData = files.map((file) => {
+      const uploadDate = new Date(file.metadata.timeCreated);
+      const formattedDate = formatDate(uploadDate);
+
+      return {
+        filename: file.name,
+        uploadedAt: formattedDate,
+        url: "https://firebasestorage.googleapis.com/v0/b/"+file.metadata.bucket+"/o/"+file.name+"?alt=media",
+        downloadUrl: "https://firebasestorage.googleapis.com/v0/b/"+file.metadata.bucket+"/o/"+file.name+"?alt=media",
+      };
     });
 
-    return res.json(result);
-
+    res.render("immagini", { files: filesData });
   } catch (error) {
-    console.error('Errore durante il recupero dei blobs:', error);
-    res.status(500).send('Errore durante il recupero dei blobs');
+    console.error("Error downloading all files:", error);
+    res.status(500).send("Internal Server Error");
   }
 });
 
 function formatDate(date) {
-  const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-  const formattedDate = date.toLocaleDateString('it-IT', options);
-  return formattedDate.replace(',', '') // Rimuove la virgola dopo la data
+  const options = {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  };
+  const formattedDate = date.toLocaleDateString("it-IT", options);
+  return formattedDate.replace(",", ""); // Rimuove la virgola dopo la data
 }
 
-router.post('/upload/:filename', requiresAuth(), upload.single('file'), async (req, res) => {
-  const filename = req.params.filename;
+router.post("/upload/:filename", requiresAuth(), upload.single("file"), async (req, res) => {
+    const fileName = req.file.originalname;
+    try {
+      await bucket.file(fileName).createWriteStream().end(req.file.buffer);
+      res.status(200).json("done");
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: "Internal server error." });
+    }
+  }
+);
 
+router.post('/download', async (req, res) => {
   try {
-    const file = req.file;
+    const { url } = req.body;
 
-    if (!filename || !file) {
-      return res.status(400).json({ error: 'Invalid request. Please provide a filename and a file.' });
-    }
-
-    const validImageTypes = ['image/jpeg', 'image/png'];
-    if (!validImageTypes.includes(file.mimetype)) {
-      return res.status(400).json({ error: 'Invalid request. Upload a JPEG or PNG image.' });
-    }
-
-    const blob = await put(filename, file.buffer, {
-      access: 'public',
+    const response = await axios({
+      url: url,
+      method: 'GET',
+      responseType: 'stream' // Setting responseType to 'stream' for handling large files
     });
 
-    return res.json(blob);
+    // Setting response headers for file download
+    res.setHeader('Content-disposition', 'attachment; filename=downloaded_image.jpg');
+    res.setHeader('Content-type', 'image/jpeg');
+
+    // Piping the response data to the response stream
+    response.data.pipe(res);
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'Internal server error.' });
-  }
-});
-
-router.delete('/delete', requiresAuth(), async (req, res) => {
-  const blobUrl = req.body.blobUrl;
-
-  try {
-    await del(blobUrl);
-
-    console.error("Image deleted successfully.");
-    res.status(200).json({ message: 'Image deleted successfully.' });
-  } catch (error) {
-    // Se c'è stato un errore durante l'eliminazione, invia una risposta di errore con lo status code 500 e un messaggio di errore generico
-    console.error("Error deleting image:", error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error downloading image:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
 

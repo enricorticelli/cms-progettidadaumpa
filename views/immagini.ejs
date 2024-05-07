@@ -46,7 +46,7 @@
     <thead class="bg-gray-50 dark:bg-gray-800">
       <tr>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Nome file
+          Nome immagine
         </th>
         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
           Anteprima
@@ -59,27 +59,27 @@
       </tr>
     </thead>
     <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-700 dark:divide-gray-600">
-      <% blobs.forEach(blob => { %>
+      <% files.forEach(file => { %>
       <tr>
         <td class="px-6 py-4 whitespace-nowrap">
-          <div class="text-sm text-gray-900 dark:text-white"><%= blob.pathname %></div>
+          <div class="text-sm text-gray-900 dark:text-white"><%= file.filename %></div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-          <img src="<%= blob.url %>" alt="<%= blob.pathname %>" class="max-w-full h-auto max-h-24">
+          <img src="<%= file.url %>" alt="<%= file.filename %>" class="max-w-full h-auto max-h-24">
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-          <div class="text-sm text-gray-900 dark:text-white"><%= blob.uploadedAt %></div>
+          <div class="text-sm text-gray-900 dark:text-white"><%= file.uploadedAt %></div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-          <button onclick="window.location.href='<%= blob.downloadUrl %>'" title="Scarica l'immagine" type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          <button onclick="downloadImage('<%= file.downloadUrl %>')" title="Scarica l'immagine" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
             <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M12 13V4M7 14H5a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1h-2m-1-5-4 5-4-5m9 8h.01" />
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M12 13V4M7 14H5a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1h-2m-1-5-4 5-4-5m9 8h.01" />
             </svg>
           </button>
-          <button onclick="salvaUrlImmagineDaEliminare('<%= blob.url %>')" data-modal-target="popup-modal" data-modal-toggle="popup-modal" title="Scarica l'immagine" type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+          <button onclick="salvaUrlImmagineDaEliminare('<%= file.url %>')" data-modal-target="popup-modal" data-modal-toggle="popup-modal" title="Scarica l'immagine" type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
             <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
-            </svg>            
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
+            </svg>
           </button>
         </td>
       </tr>
@@ -116,4 +116,4 @@
     </div>
   </div>
 
-<%- include('partials/footer') -%>
+  <%- include('partials/footer') -%>

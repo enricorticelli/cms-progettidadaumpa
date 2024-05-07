@@ -67,11 +67,14 @@ router.get('/:codice', requiresAuth(), async function (req, res, next) {
       descrizione: artistData.descrizione ? artistData.descrizione.trim().replace(/\s+/g, ' ') : '',
       sezione_2: artistData.sezione_2 ? artistData.sezione_2.trim().replace(/\s+/g, ' ') : '',
       spettacoli: artistData.spettacoli ? artistData.spettacoli.trim().replace(/\s+/g, ' ') : '',
+      img1: artistData.img1.trim(),
+      img2: artistData.img2.trim(),
+      img3: artistData.img3.trim(),
+      img4: artistData.img4.trim(),
       data_aggiunta: artistData.data_aggiunta,
       data_modifica: artistData.data_modifica
     };
     
-    console.log(trimmedArtistData)
 
     res.render('scheda_artista', {
       editMode: true,
