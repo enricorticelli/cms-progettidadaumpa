@@ -13,7 +13,22 @@ const { v4: uuidv4 } = require('uuid')
 const axios = require('axios');
 const { requiresAuth } = require("express-openid-connect");
 
-const serviceAccount = require("../firebase-service-account.json");
+const privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, '\n');
+
+const serviceAccount = {
+  "type": "service_account",
+  "project_id": process.env.PROJECT_ID,
+  "private_key_id": process.env.PRIVATE_KEY_ID,
+  "private_key": privateKey, // Use the processed private key
+  "client_email": process.env.CLIENT_EMAIL,
+  "client_id": process.env.CLIENT_ID,
+  "auth_uri": process.env.AUTH_URI,
+  "token_uri": process.env.TOKEN_URI,
+  "auth_provider_x509_cert_url": process.env.AUTH_PROVIDER_X509_CERT_URL,
+  "client_x509_cert_url": process.env.CLIENT_X509_CERT_URL,
+  "universe_domain": process.env.UNIVERSE_DOMAIN
+};
+
 var admin = require("firebase-admin");
 
 admin.initializeApp({
