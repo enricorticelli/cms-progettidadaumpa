@@ -28,7 +28,8 @@
     "pg": "^8.11.5",
     "salted-md5": "^4.0.8",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.0"
+    "swagger-ui-express": "^5.0.0",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.3"
