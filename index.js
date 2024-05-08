@@ -5,9 +5,9 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const { auth } = require("express-openid-connect");
 
-const router = require("./routes/router");
-const artistiRouter = require("./routes/artisti-router");
-const immaginiRouter = require("./routes/immagini-router");
+const router = require("./routes/index_router");
+const artistiRouter = require("./routes/artisti_router");
+const immaginiRouter = require("./routes/immagini_router");
 
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");

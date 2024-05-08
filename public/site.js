@@ -14,8 +14,7 @@ function deleteArtista() {
   })
     .then((response) => {
       if (response.ok) {
-        // Operazione di eliminazione completata con successo
-        window.location.reload(); // Ricarica la pagina o esegui altre azioni necessarie
+        showSuccessMessage("Operazione di eliminazione completata con successo!");
       } else {
         alert("Errore durante l'eliminazione dell'artista: " + error);
       }
@@ -40,6 +39,8 @@ function toggleAttivo(codiceArtista, isChecked) {
     .then((response) => {
       if (!response.ok) {
         alert("Errore: " + response.error);
+      } else {
+        showSuccessMessage("Modifica all'artista avvenuta con successo!");
       }
     })
     .then((data) => {
@@ -167,9 +168,7 @@ function initializeUploadButton(
       console.log("Upload result:", result);
 
       if (response.ok) {
-        showSuccessMessage(successMessage);
-        setTimeout(() => hideSuccessMessage(successMessage), 3000); // Nascondere la notifica dopo 3 secondi
-        window.location.reload(); // Ricarica la pagina o esegui altre azioni necessarie
+        showSuccessMessage("Caricamento avvenuto con successo!");
       } else {
         alert(result.error);
       }
@@ -200,8 +199,7 @@ function deleteImmagine() {
   fetch("./delete", options)
     .then((response) => {
       if (response.ok) {
-        // Se la richiesta ha avuto successo, fai qualcosa (ad esempio, ricarica la pagina)
-        window.location.reload();
+        showSuccessMessage("Immagine eliminata con successo!")
       } else {
         // Se la richiesta ha fallito, gestisci l'errore
         console.error("Error deleting image:", response.statusText);
@@ -215,12 +213,15 @@ function deleteImmagine() {
     });
 }
 
-function showSuccessMessage(successMessage) {
-  successMessage.classList.remove("hidden");
-}
+function showSuccessMessage(messageText) {
+  const successMessage = document.getElementById("success-message");
 
-function hideSuccessMessage(successMessage) {
-  successMessage.classList.add("hidden");
+  successMessage.textContent = messageText;
+  successMessage.classList.remove("hidden");
+
+  setTimeout(() => {
+    window.location.reload();
+  }, 2000); // Nascondere la notifica dopo 3 secondi
 }
 
 async function downloadImage(url) {
@@ -241,8 +242,6 @@ async function downloadImage(url) {
     // Creating a Blob object from the response data
     const blob = await response.blob();
 
-    console
-
     // Creating a temporary anchor element
     const link = document.createElement('a');
     link.href = window.URL.createObjectURL(blob);
@@ -255,5 +254,18 @@ async function downloadImage(url) {
     window.URL.revokeObjectURL(link.href);
   } catch (error) {
     console.error('Error downloading image:', error);
+  }
+}
+
+document.onreadystatechange = function () {
+  var state = document.readyState
+  if (state == 'interactive') {
+       document.getElementById('contents').style.visibility="hidden";
+  } else if (state == 'complete') {
+      setTimeout(function(){
+         document.getElementById('interactive');
+         document.getElementById('load').style.visibility="hidden";
+         document.getElementById('contents').style.visibility="visible";
+      },1000);
   }
 }

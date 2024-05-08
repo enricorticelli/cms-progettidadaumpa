@@ -62,7 +62,7 @@ async function uploadFile(bucket, fileName, buffer) {
 async function getFilesData(bucket) {
   const [files] = await bucket.getFiles();
   if (!files || files.length === 0) {
-    throw new Error("No files found");
+    return [];
   }
   return files.map((file) => {
     const uploadDate = new Date(file.metadata.timeCreated);
@@ -75,6 +75,7 @@ async function getFilesData(bucket) {
     };
   });
 }
+
 
 module.exports = {
   downloadFile,

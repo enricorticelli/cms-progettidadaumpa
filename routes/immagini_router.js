@@ -4,7 +4,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const { requiresAuth } = require("express-openid-connect");
-const { downloadFile, uploadFile, getFilesData } = require("./utils");
+const { downloadFile, uploadFile, getFilesData } = require("../services/immagini_service");
 
 const upload = multer({ storage: multer.memoryStorage() });
 
