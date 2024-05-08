@@ -5,7 +5,7 @@ const router = express.Router();
 const { requiresAuth } = require('express-openid-connect');
 require("dotenv").config();
 const { getFilesData } = require("../services/immagini_service");
-const { getAllArtists, getArtistByCode, getEmptyArtist, deleteArtist, toggleArtist } = require("../services/artisti_service");
+const { getAllArtists, getArtistByCode, getEmptyArtist, deleteArtist, toggleArtist, updateArtist } = require("../services/artisti_service");
 
 router.get('/', requiresAuth(), async function (req, res, next) {
   try {
@@ -65,6 +65,20 @@ router.post('/toggle/:codice', requiresAuth(), async function (req, res, next) {
   } catch (err) {
     console.error('Errore durante l\'aggiornamento dello stato \'attivo\' dell\'artista:', err);
     res.status(500).send('Errore durante l\'aggiornamento dello stato \'attivo\' dell\'artista');
+  }
+});
+
+router.post('/:codice', requiresAuth(), async function (req, res, next) {
+  const codice = req.params.codice;
+  const body = req.body;
+
+  try {
+    await updateArtist(codice, body)
+    
+    res.redirect('/artisti');
+  } catch (err) {
+    console.error('Errore durante l\'aggiornamento dell\'artista:', err);
+    res.status(500).send('Errore durante l\'aggiornamento dell\'artista');
   }
 });
 

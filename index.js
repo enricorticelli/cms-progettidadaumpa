@@ -24,7 +24,6 @@ const authConfig = {
   issuerBaseURL: process.env.ISSUER_BASE_URL,
 };
 
-
 const privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, '\n');
 
 const serviceAccount = {

@@ -9,8 +9,15 @@ const { downloadFile, uploadFile, getFilesData } = require("../services/immagini
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.get("/", requiresAuth(), async (req, res) => {
+  console.log(req)
+
   try {
-    const filesData = await getFilesData(res.locals.bucket);
+    const { maxResults = undefined, pageToken = undefined } = req.body;
+    const options = {
+      maxResults,
+      pageToken,
+    };
+    const filesData = await getFilesData(res.locals.bucket, options);
     res.render("immagini", { files: filesData });
   } catch (error) {
     console.error("Error downloading all files:", error);
