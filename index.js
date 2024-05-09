@@ -15,6 +15,18 @@ const swaggerUi = require("swagger-ui-express");
 const app = express();
 const port = process.env.PORT || 8080;
 
+const NodeCache = require("node-cache");
+const myCache = new NodeCache({
+  stdTTL: 500, // Elementi scadono dopo 60 secondi
+  checkperiod: 1000, // Controllo della cache ogni 2 minuti
+  useClones: true, // Clonazione degli oggetti memorizzati per evitare modifiche accidentali
+  deleteOnExpire: true, // Rimozione automatica degli elementi scaduti
+  onExpire: function (key, value) {
+    console.log(`Key ${key} expired`);
+  },
+  maxKeys: 1000 // Massimo 1000 chiavi nella cache
+});
+
 const authConfig = {
   authRequired: true,
   auth0Logout: true,
@@ -87,6 +99,7 @@ app.use(auth(authConfig));
 app.use(function (req, res, next) {
   res.locals.user = req.oidc.user;
   res.locals.bucket = bucket;
+  res.locals.myCache = myCache;
   next();
 });
 

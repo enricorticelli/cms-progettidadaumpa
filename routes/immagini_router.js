@@ -9,15 +9,20 @@ const { downloadFile, uploadFile, getFilesData } = require("../services/immagini
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.get("/", requiresAuth(), async (req, res) => {
-  console.log(req)
-
   try {
     const { maxResults = undefined, pageToken = undefined } = req.body;
     const options = {
       maxResults,
       pageToken,
     };
-    const filesData = await getFilesData(res.locals.bucket, options);
+    var filesData = res.locals.myCache.get("filesData");
+    if (filesData !== undefined) {
+      console.log("FilesData found in CACHE");
+    } else {
+      console.log("FilesData CACHED");
+      filesData = await getFilesData(res.locals.bucket);
+      res.locals.myCache.set("filesData", filesData);
+    }
     res.render("immagini", { files: filesData });
   } catch (error) {
     console.error("Error downloading all files:", error);
@@ -29,6 +34,9 @@ router.post("/upload/:filename", requiresAuth(), upload.single("file"), async (r
   const fileName = req.file.originalname;
   try {
     await uploadFile(res.locals.bucket, fileName, req.file.buffer);
+    res.locals.myCache.del("filesData");
+    console.log("FilesData removed from CACHE");
+
     res.status(200).json("done");
   } catch (error) {
     console.error(error);
@@ -45,6 +53,9 @@ router.delete("/delete", requiresAuth(), async (req, res) => {
   const fileName = req.body.filename;
   try {
     await res.locals.bucket.file(fileName).delete();
+    res.locals.myCache.del("filesData");
+    console.log("FilesData removed from CACHE");
+
     res.status(200).json("File deleted successfully.");
   } catch (error) {
     console.error(error);
