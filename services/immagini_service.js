@@ -65,7 +65,7 @@ async function getFilesData(bucket, options = {}) {
     return [];
   }
 
-  files.sort((a, b) => a.name.localeCompare(b.name));
+  files.sort((a, b) => b.metadata.timeCreated.localeCompare(a.metadata.timeCreated));
 
   return files.map((file) => {
     const uploadDate = new Date(file.metadata.timeCreated);
