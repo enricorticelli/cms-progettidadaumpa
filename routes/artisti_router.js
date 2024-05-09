@@ -28,7 +28,16 @@ router.get('/', requiresAuth(), async function (req, res, next) {
 router.get("/nuovo", requiresAuth(), async function (req, res, next) {
   const emptyArtist = await getEmptyArtist();
 
-  res.render("scheda_artista", { editMode: false, artista: emptyArtist });
+  var filesData = res.locals.myCache.get("filesData");
+    if (filesData !== undefined) {
+      console.log("FilesData found in cache");
+    } else {
+      console.log("FilesData CACHED");
+      filesData = await getFilesData(res.locals.bucket);
+      res.locals.myCache.set("filesData", filesData);
+    }
+
+  res.render("scheda_artista", { editMode: false, artista: emptyArtist, files: filesData  });
 });
 
 router.get('/:codice', requiresAuth(), async function (req, res, next) {
