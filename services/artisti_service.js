@@ -120,7 +120,7 @@ async function updateArtist(codice, body) {
     const insertResult = await client.query(
       `
         INSERT INTO artisti (codice, nome, sito, descrizione, sezione_2, spettacoli, img1, img2, img3, img4, data_aggiunta, data_modifica)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10 NOW(), NOW());
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW());
       `,
       [
         cleanedCodice,
