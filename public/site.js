@@ -26,11 +26,11 @@ function deleteArtista() {
       if (response.ok) {
         showSuccessMessage("Operazione di eliminazione completata con successo!");
       } else {
-        alert("Errore durante l'eliminazione dell'artista: " + error);
+        showErrorMessage("Errore durante l'eliminazione dell'artista: " + error)
       }
     })
     .catch((error) => {
-      alert("Errore durante l'eliminazione dell'artista: " + error);
+      showErrorMessage("Errore durante l'eliminazione dell'artista: " + error)
       console.error("Errore durante l'eliminazione dell'artista:", error);
     });
 }
@@ -48,7 +48,7 @@ function toggleAttivo(codiceArtista, isChecked) {
   })
     .then((response) => {
       if (!response.ok) {
-        alert("Errore: " + response.error);
+        showErrorMessage("Errore: " + response.error);
       } else {
         showSuccessMessage("Modifica all'artista avvenuta con successo!");
       }
@@ -57,7 +57,7 @@ function toggleAttivo(codiceArtista, isChecked) {
       console.log("Artist attivo status updated successfully");
     })
     .catch((error) => {
-      alert("Errore: " + error);
+      showErrorMessage("Errore: " + error);
       console.error("There was a problem with the fetch operation:", error);
     });
 }
@@ -127,11 +127,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const dropzoneFileInput = document.getElementById("dropzone-file");
   const previewImage = document.getElementById("preview-image");
   const uploadButton = document.getElementById("upload-button");
-  const successMessage = document.getElementById("success-message");
 
-  if (dropzoneFileInput && previewImage && uploadButton && successMessage) {
+  if (dropzoneFileInput && previewImage && uploadButton) {
     initializeDropzone(dropzoneFileInput, previewImage, uploadButton);
-    initializeUploadButton(uploadButton, dropzoneFileInput, successMessage);
+    initializeUploadButton(uploadButton, dropzoneFileInput);
   }
 });
 
@@ -158,6 +157,8 @@ function initializeUploadButton(
   dropzoneFileInput
 ) {
   uploadButton.addEventListener("click", async function () {
+    uploadButton.classList.add("hidden");
+
     const file = dropzoneFileInput.files[0];
     if (!file) return;
 
@@ -178,8 +179,9 @@ function initializeUploadButton(
 
       if (response.ok) {
         showSuccessMessage("Caricamento avvenuto con successo!");
+        window.location.reload();
       } else {
-        alert(result.error);
+        showErrorMessage(result.error);
       }
     } catch (error) {
       console.error("Error during upload:", error);
@@ -208,29 +210,39 @@ function deleteImmagine() {
   fetch("./delete", options)
     .then((response) => {
       if (response.ok) {
-        showSuccessMessage("Immagine eliminata con successo!")
+        showSuccessMessage("Immagine eliminata con successo!");
+        window.location.reload();
       } else {
         // Se la richiesta ha fallito, gestisci l'errore
         console.error("Error deleting image:", response.statusText);
-        alert("Errore durante l'eliminazione dell'immagine.");
+        showErrorMessage("Errore durante l'eliminazione dell'immagine.");
       }
     })
     .catch((error) => {
       // Se c'è stato un errore durante l'esecuzione della richiesta, gestiscilo
       console.error("Error deleting image:", error);
-      alert("Errore durante l'eliminazione dell'immagine.");
+      showErrorMessage("Errore durante l'eliminazione dell'immagine.");
     });
 }
 
 function showSuccessMessage(messageText) {
-  const successMessage = document.getElementById("success-message");
+  Toastify({
+    text: messageText,
+    duration: 3000,
+    close: true,
+    backgroundColor: "green",
+    position: "center",
+  }).showToast();
+}
 
-  successMessage.textContent = messageText;
-  successMessage.classList.remove("hidden");
-
-  setTimeout(() => {
-    window.location.reload();
-  }, 2000); // Nascondere la notifica dopo 3 secondi
+function showErrorMessage(messageText) {
+  Toastify({
+    text: messageText,
+    duration: 3000,
+    close: true,
+    backgroundColor: "red",
+    position: "center",
+  }).showToast();
 }
 
 async function downloadImage(url) {
@@ -268,9 +280,8 @@ async function downloadImage(url) {
 
 document.onreadystatechange = function () {
   var state = document.readyState
-  if (state == 'interactive') {
-       document.getElementById('contents').style.visibility="hidden";
-  } else if (state == 'complete') {
+  document.getElementById('contents').style.visibility="hidden";
+  if (state == 'complete') {
       setTimeout(function(){
          document.getElementById('interactive');
          document.getElementById('load').style.visibility="hidden";
