@@ -59,11 +59,14 @@ async function uploadFile(bucket, fileName, buffer) {
   });
 }
 
-async function getFilesData(bucket) {
-  const [files] = await bucket.getFiles();
+async function getFilesData(bucket, options = {}) {
+  const [files] = await bucket.getFiles(options);
   if (!files || files.length === 0) {
     return [];
   }
+
+  files.sort((a, b) => a.name.localeCompare(b.name));
+
   return files.map((file) => {
     const uploadDate = new Date(file.metadata.timeCreated);
     const formattedDate = formatDate(uploadDate);
@@ -75,7 +78,6 @@ async function getFilesData(bucket) {
     };
   });
 }
-
 
 module.exports = {
   downloadFile,

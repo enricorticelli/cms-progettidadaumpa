@@ -6,6 +6,16 @@ function salvaUrlImmagineDaEliminare(value) {
   document.getElementById("filename").value = value;
 }
 
+function salvaIdImmagine(value) {
+  document.getElementById("idImmagine").value = value;
+}
+
+function selezionaImmagine(url) {
+  var idImmagine = document.getElementById("idImmagine").value;
+  document.getElementById("img"+idImmagine).value = url;
+  document.getElementById("imgPreview"+idImmagine).src = url;
+}
+
 function deleteArtista() {
   var codiceArtista = document.getElementById("codiceArtista").value;
 
@@ -145,8 +155,7 @@ function initializeDropzone(dropzoneFileInput, previewImage, uploadButton) {
 
 function initializeUploadButton(
   uploadButton,
-  dropzoneFileInput,
-  successMessage
+  dropzoneFileInput
 ) {
   uploadButton.addEventListener("click", async function () {
     const file = dropzoneFileInput.files[0];
@@ -269,3 +278,4 @@ document.onreadystatechange = function () {
       },1000);
   }
 }
+
