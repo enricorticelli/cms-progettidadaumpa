@@ -12,8 +12,8 @@ function salvaIdImmagine(value) {
 
 function selezionaImmagine(url) {
   var idImmagine = document.getElementById("idImmagine").value;
-  document.getElementById("img"+idImmagine).value = url;
-  document.getElementById("imgPreview"+idImmagine).src = url;
+  document.getElementById("img" + idImmagine).value = url;
+  document.getElementById("imgPreview" + idImmagine).src = url;
 }
 
 function deleteArtista() {
@@ -24,13 +24,17 @@ function deleteArtista() {
   })
     .then((response) => {
       if (response.ok) {
-        showSuccessMessage("Operazione di eliminazione completata con successo!");
+        showSuccessMessage(
+          "Operazione di eliminazione completata con successo!"
+        );
       } else {
-        showErrorMessage("Errore durante l'eliminazione dell'artista: " + error)
+        showErrorMessage(
+          "Errore durante l'eliminazione dell'artista: " + error
+        );
       }
     })
     .catch((error) => {
-      showErrorMessage("Errore durante l'eliminazione dell'artista: " + error)
+      showErrorMessage("Errore durante l'eliminazione dell'artista: " + error);
       console.error("Errore durante l'eliminazione dell'artista:", error);
     });
 }
@@ -152,10 +156,7 @@ function initializeDropzone(dropzoneFileInput, previewImage, uploadButton) {
   });
 }
 
-function initializeUploadButton(
-  uploadButton,
-  dropzoneFileInput
-) {
+function initializeUploadButton(uploadButton, dropzoneFileInput) {
   uploadButton.addEventListener("click", async function () {
     uploadButton.classList.add("hidden");
 
@@ -247,12 +248,12 @@ function showErrorMessage(messageText) {
 
 async function downloadImage(url) {
   try {
-    const response = await fetch('./download', {
-      method: 'POST',
+    const response = await fetch("./download", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ url })
+      body: JSON.stringify({ url }),
     });
 
     if (!response.ok) {
@@ -264,9 +265,9 @@ async function downloadImage(url) {
     const blob = await response.blob();
 
     // Creating a temporary anchor element
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = window.URL.createObjectURL(blob);
-    link.download = 'downloaded_image.jpg';
+    link.download = "downloaded_image.jpg";
 
     // Programmatically clicking the anchor to trigger download
     link.click();
@@ -274,19 +275,64 @@ async function downloadImage(url) {
     // Cleaning up the anchor element
     window.URL.revokeObjectURL(link.href);
   } catch (error) {
-    console.error('Error downloading image:', error);
+    console.error("Error downloading image:", error);
   }
 }
 
 document.onreadystatechange = function () {
-  var state = document.readyState
-  document.getElementById('contents').style.visibility="hidden";
-  if (state == 'complete') {
-      setTimeout(function(){
-         document.getElementById('interactive');
-         document.getElementById('load').style.visibility="hidden";
-         document.getElementById('contents').style.visibility="visible";
-      },1000);
+  var state = document.readyState;
+  document.getElementById("contents").style.visibility = "hidden";
+  if (state == "complete") {
+    setTimeout(function () {
+      document.getElementById("load").style.visibility = "hidden";
+      document.getElementById("contents").style.visibility = "visible";
+      document.onreadystatechange = null; // Rimuove il listener per evitare ulteriori chiamate
+    }, 300);
   }
+};
+
+function spostaSu(codiceArtista) {
+  fetch("/artisti/" + codiceArtista + "/up", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        showErrorMessage("Errore: " + response.error);
+      } else {
+        window.location.reload();
+      }
+    })
+    .then((data) => {
+      console.log("Artist attivo status updated successfully");
+    })
+    .catch((error) => {
+      showErrorMessage("Errore: " + error);
+      console.error("There was a problem with the fetch operation:", error);
+    });
 }
 
+function spostaGiu(codiceArtista) {
+  fetch("/artisti/" + codiceArtista + "/down", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        showErrorMessage("Errore: " + response.error);
+      } else {
+        window.location.reload();
+      }
+    })
+    .then((data) => {
+      console.log("Artist attivo status updated successfully");
+    })
+    .catch((error) => {
+      showErrorMessage("Errore: " + error);
+      console.error("There was a problem with the fetch operation:", error);
+    });
+}

@@ -9,7 +9,7 @@ const pool = new Pool({
 async function getAllArtists() {
   try {
     const client = await pool.connect();
-    const result = await client.query(`SELECT * FROM artisti ORDER BY nome;`);
+    const result = await client.query(`SELECT * FROM artisti ORDER BY ordine;`);
     client.release();
     return result.rows;
   } catch (err) {
@@ -90,6 +90,96 @@ async function toggleArtist(codice, attivo) {
   client.release();
 }
 
+async function spostaSu(codice) {
+  const client = await pool.connect();
+
+  try {
+    // Trova l'ordine dell'artista da spostare
+    const currentArtist = await client.query(
+      `
+      SELECT id, ordine
+      FROM artisti
+      WHERE id = $1
+      `,
+      [codice]
+    );
+
+    // Sposta l'artista verso l'alto e abbassa l'ordine dell'artista sopra
+    const updateResult1 = await client.query(
+      `
+      UPDATE artisti AS a1
+      SET ordine = a1.ordine + 1
+      FROM (SELECT ordine FROM artisti WHERE id = $1) AS current_artist
+      WHERE a1.ordine = current_artist.ordine - 1
+      AND current_artist.ordine > 1;
+      `,
+      [codice]
+    );
+
+    // Sposta l'artista specificato in alto di una posizione
+    const updateResult2 = await client.query(
+      `
+      UPDATE artisti
+      SET ordine = ordine - 1
+      WHERE id = $1
+      AND ordine > 1;
+      `,
+      [codice]
+    );
+
+    console.log("Spostato in alto: " + codice);
+  } catch (err) {
+    console.error("Error moving artist:", err);
+  } finally {
+    client.release();
+  }
+}
+
+async function spostaGiu(codice) {
+  const client = await pool.connect();
+
+  try {
+    // Trova l'ordine dell'artista da spostare
+    const currentArtist = await client.query(
+      `
+      SELECT id, ordine
+      FROM artisti
+      WHERE codice = $1
+      `,
+      [codice]
+    );
+
+    // Sposta l'artista verso il basso e aumenta l'ordine dell'artista sotto
+    const updateResult1 = await client.query(
+      `
+      UPDATE artisti AS a1
+      SET ordine = a1.ordine - 1
+      FROM (SELECT ordine FROM artisti WHERE codice = $1) AS current_artist
+      WHERE a1.ordine = current_artist.ordine + 1
+      AND current_artist.ordine < (SELECT MAX(ordine) FROM artisti);
+      `,
+      [codice]
+    );
+
+    // Sposta l'artista specificato in basso di una posizione
+    const updateResult2 = await client.query(
+      `
+      UPDATE artisti
+      SET ordine = ordine + 1
+      WHERE codice = $1
+      AND ordine < (SELECT MAX(ordine) FROM artisti);
+      `,
+      [codice]
+    );
+
+    console.log("Spostato in basso: " + codice);
+  } catch (err) {
+    console.error("Error moving artist:", err);
+  } finally {
+    client.release();
+  }
+}
+
 async function updateArtist(codice, body) {
   const {
     nome,
@@ -132,11 +222,11 @@ async function updateArtist(codice, body) {
         img1,
         img2,
         img3,
-        img4
+        img4,
       ]
     );
 
-    console.log("Artista creato con successo "+insertResult);
+    console.log("Artista creato con successo " + insertResult);
   } else {
     // Update existing artist
     const updateResult = await client.query(
@@ -155,11 +245,11 @@ async function updateArtist(codice, body) {
         img2,
         img3,
         img4,
-        codice
+        codice,
       ]
     );
 
-    console.log("Artista aggiornato con successo "+updateResult);
+    console.log("Artista aggiornato con successo " + updateResult);
   }
 
   client.release();
@@ -172,4 +262,6 @@ module.exports = {
   deleteArtist,
   toggleArtist,
   updateArtist,
+  spostaSu,
+  spostaGiu,
 };
