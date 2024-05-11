@@ -287,11 +287,12 @@ document.onreadystatechange = function () {
       document.getElementById("load").style.visibility = "hidden";
       document.getElementById("contents").style.visibility = "visible";
       document.onreadystatechange = null; // Rimuove il listener per evitare ulteriori chiamate
-    }, 300);
+    }, 1000);
   }
 };
 
 function spostaSu(codiceArtista) {
+  document.getElementById("load").style.visibility = "visible";
   fetch("/artisti/" + codiceArtista + "/up", {
     method: "POST",
     headers: {
@@ -315,6 +316,8 @@ function spostaSu(codiceArtista) {
 }
 
 function spostaGiu(codiceArtista) {
+  document.getElementById("load").style.visibility = "visible";
+
   fetch("/artisti/" + codiceArtista + "/down", {
     method: "POST",
     headers: {
