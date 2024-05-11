@@ -26,7 +26,7 @@
       <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
         <tr>
           <th scope="col" class="px-4 py-3">Nome</th>
-          <th scope="col" class="px-4 py-3">Descrizione</th>
+          <th scope="col" class="px-4 py-3">Biografia</th>
           <th scope="col" class="px-4 py-3">Attivo</th>
           <th scope="col" class="px-4 py-3">Data creazione</th>
           <th scope="col" class="px-4 py-3">Data ultima modifica</th>
@@ -41,7 +41,7 @@
           <td scope="row" class="px-4 py-3 font-medium text-gray-900 dark:text-white">
             <%= artista.nome %>
           </td>
-          <td class="px-4 py-3"><%= artista.descrizione.slice(0, 40) %>...</td>
+          <td class="px-4 py-3"><%= artista.descrizione ? artista.descrizione.slice(0, 40) + '...' : 'Nessuna biografia' %></td>
           <td class="px-4 py-3">
             <label title="Attiva/Disattiva" class="inline-flex items-center mb-5 cursor-pointer">
               <input type="checkbox" <%= artista.attivo ? 'checked' : '' %> onclick="toggleAttivo('<%= artista.codice %>', this.checked)" value="" class="sr-only peer">
