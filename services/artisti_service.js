@@ -7,39 +7,29 @@ const pool = new Pool({
 });
 
 async function getAllArtists() {
+  const client = await pool.connect();
   try {
-    const client = await pool.connect();
     const result = await client.query(`SELECT * FROM artisti ORDER BY ordine;`);
-    client.release();
     return result.rows;
   } catch (err) {
-    console.error(
-      "Errore durante il recupero dei dati dalla tabella artisti:",
-      err
-    );
-    throw new Error(
-      "Errore durante il recupero dei dati dalla tabella artisti"
-    );
+    console.error("Error getting artists:", err);
+  } finally {
+    client.release();
   }
 }
 
 async function getArtistByCode(codice) {
+  const client = await pool.connect();
   try {
-    const client = await pool.connect();
     const result = await client.query(
       `SELECT * FROM artisti WHERE codice = $1;`,
       [codice]
     );
-    client.release();
     return result.rows[0];
   } catch (err) {
-    console.error(
-      "Errore durante il recupero dei dati dalla tabella artisti:",
-      err
-    );
-    throw new Error(
-      "Errore durante il recupero dei dati dalla tabella artisti"
-    );
+    console.error("Error getting artist " + codice + "+:", err);
+  } finally {
+    client.release();
   }
 }
 
@@ -63,63 +53,175 @@ async function getEmptyArtist() {
 async function deleteArtist(codice) {
   const client = await pool.connect();
 
-  const deleteResult = await client.query(
-    `
+  try {
+    const deleteResult = await client.query(
+      `
     DELETE FROM artisti WHERE codice = $1;
   `,
-    [codice]
-  );
+      [codice]
+    );
 
-  console.log("Deleted: " + deleteResult);
-  client.release();
+    console.log("Deleted: " + deleteResult);
+    return await getAllArtists();
+  } catch (err) {
+    console.error("Error deleting artist:", err);
+  } finally {
+    client.release();
+  }
 }
 
 async function toggleArtist(codice, attivo) {
   const client = await pool.connect();
 
-  const updateResult = await client.query(
-    `
+  try {
+    const updateResult = await client.query(
+      `
       UPDATE artisti 
       SET attivo = $1 
       WHERE codice = $2;
     `,
-    [attivo, codice]
-  );
+      [attivo, codice]
+    );
 
-  console.log("Toggled: " + updateResult);
-  client.release();
+    console.log("Toggled: " + updateResult);
+
+    return await getAllArtists();
+  } catch (err) {
+    console.error("Error toggling artist:", err);
+  } finally {
+    client.release();
+  }
+}
+
+async function spostaInCima(codice) {
+  const client = await pool.connect();
+
+  try {
+    // Get current order of the specified artist
+    const { rows } = await client.query(
+      `SELECT ordine FROM artisti WHERE codice = $1`,
+      [codice]
+    );
+    const currentOrder = rows[0].ordine;
+
+    // Increment the order of all artists that were ahead of the specified artist
+    await client.query(
+      `
+      UPDATE artisti
+      SET ordine = ordine + 1
+      WHERE ordine < $1;
+      `,
+      [currentOrder]
+    );
+
+    // Set the specified artist's order to 1
+    await client.query(
+      `
+      UPDATE artisti
+      SET ordine = 1
+      WHERE codice = $1;
+      `,
+      [codice]
+    );
+
+    console.log("Artista spostato in cima: " + codice);
+
+    return await getAllArtists();
+  } catch (err) {
+    console.error("Error moving artist to top:", err);
+  } finally {
+    client.release();
+  }
+}
+
+async function spostaInFondo(codice) {
+  const client = await pool.connect();
+
+  try {
+    // Get current order of the specified artist and the maximum order
+    const { rows: currentRows } = await client.query(
+      `SELECT ordine FROM artisti WHERE codice = $1`,
+      [codice]
+    );
+    const currentOrder = currentRows[0].ordine;
+
+    const { rows: maxRows } = await client.query(
+      `SELECT MAX(ordine) as maxOrdine FROM artisti`
+    );
+    const maxOrder = maxRows[0].maxordine;
+
+    // Decrement the order of all artists that were behind the specified artist
+    await client.query(
+      `
+      UPDATE artisti
+      SET ordine = ordine - 1
+      WHERE ordine > $1;
+      `,
+      [currentOrder]
+    );
+
+    // Set the specified artist's order to the maximum order value plus one
+    await client.query(
+      `
+      UPDATE artisti
+      SET ordine = $1
+      WHERE codice = $2;
+      `,
+      [maxOrder, codice]
+    );
+
+    console.log("Artista spostato in fondo: " + codice);
+
+    return await getAllArtists();
+  } catch (err) {
+    console.error("Error moving artist to bottom:", err);
+  } finally {
+    client.release();
+  }
 }
 
 async function spostaSu(codice) {
   const client = await pool.connect();
 
   try {
-    // Sposta l'artista verso l'alto e abbassa l'ordine dell'artista sopra
-    const updateResult1 = await client.query(
-      `
-      UPDATE artisti AS a1
-      SET ordine = a1.ordine - 1
-      FROM (SELECT ordine FROM artisti WHERE codice = $1) AS current_artist
-      WHERE a1.ordine = current_artist.ordine
-      AND current_artist.ordine > 1;
-      `,
+    await client.query("BEGIN");
+
+    // Get current artist's order
+    const res = await client.query(
+      `SELECT ordine FROM artisti WHERE codice = $1`,
       [codice]
     );
+    const currentOrder = res.rows[0].ordine;
 
-    // Sposta l'artista specificato in alto di una posizione
-    const updateResult2 = await client.query(
-      `
-      UPDATE artisti
-      SET ordine = ordine - 1
-      WHERE codice = $1
-      AND ordine > 1;
-      `,
-      [codice]
-    );
+    if (currentOrder > 1) {
+      // Increment order of the artist currently above
+      await client.query(
+        `
+        UPDATE artisti
+        SET ordine = ordine + 1
+        WHERE ordine = $1 - 1;
+        `,
+        [currentOrder]
+      );
 
-    console.log("Spostato in alto: " + codice);
+      // Decrement order of the specified artist
+      await client.query(
+        `
+        UPDATE artisti
+        SET ordine = ordine - 1
+        WHERE codice = $1;
+        `,
+        [codice]
+      );
+
+      console.log("Artista spostato in alto: " + codice);
+    }
+
+    await client.query("COMMIT");
+    return await getAllArtists();
   } catch (err) {
-    console.error("Error moving artist:", err);
+    await client.query("ROLLBACK");
+    console.error("Error moving artist up:", err);
   } finally {
     client.release();
   }
@@ -129,32 +231,49 @@ async function spostaGiu(codice) {
   const client = await pool.connect();
 
   try {
-    // Sposta l'artista verso il basso e aumenta l'ordine dell'artista sotto
-    const updateResult1 = await client.query(
-      `
-      UPDATE artisti AS a1
-      SET ordine = a1.ordine - 1
-      FROM (SELECT ordine FROM artisti WHERE codice = $1) AS current_artist
-      WHERE a1.ordine = current_artist.ordine + 1
-      AND current_artist.ordine < (SELECT MAX(ordine) FROM artisti);
-      `,
+    await client.query("BEGIN");
+
+    // Get current artist's order and maximum order
+    const res = await client.query(
+      `SELECT ordine FROM artisti WHERE codice = $1`,
       [codice]
     );
+    const currentOrder = res.rows[0].ordine;
 
-    // Sposta l'artista specificato in basso di una posizione
-    const updateResult2 = await client.query(
-      `
-      UPDATE artisti
-      SET ordine = ordine + 1
-      WHERE codice = $1
-      AND ordine < (SELECT MAX(ordine) FROM artisti);
-      `,
-      [codice]
+    const maxRes = await client.query(
+      `SELECT MAX(ordine) as maxOrdine FROM artisti`
     );
+    const maxOrder = maxRes.rows[0].maxordine;
 
-    console.log("Spostato in basso: " + codice);
+    if (currentOrder < maxOrder) {
+      // Decrement order of the artist currently below
+      await client.query(
+        `
+        UPDATE artisti
+        SET ordine = ordine - 1
+        WHERE ordine = $1 + 1;
+        `,
+        [currentOrder]
+      );
+
+      // Increment order of the specified artist
+      await client.query(
+        `
+        UPDATE artisti
+        SET ordine = ordine + 1
+        WHERE codice = $1;
+        `,
+        [codice]
+      );
+
+      console.log("Artista spostato in basso: " + codice);
+    }
+
+    await client.query("COMMIT");
+    return await getAllArtists();
   } catch (err) {
-    console.error("Error moving artist:", err);
+    await client.query("ROLLBACK");
+    console.error("Error moving artist down:", err);
   } finally {
     client.release();
   }
@@ -242,6 +361,8 @@ module.exports = {
   deleteArtist,
   toggleArtist,
   updateArtist,
-  spostaSu,
+  spostaInCima,
+  spostaInFondo,
   spostaGiu,
+  spostaSu,
 };

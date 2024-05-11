@@ -1,9 +1,11 @@
 function salvaArtistaDaEliminare(value) {
   document.getElementById("codiceArtista").value = value;
+  apriModal("artisti");
 }
 
 function salvaUrlImmagineDaEliminare(value) {
   document.getElementById("filename").value = value;
+  apriModal("immagini");
 }
 
 function salvaIdImmagine(value) {
@@ -37,38 +39,10 @@ function deleteArtista() {
       showErrorMessage("Errore durante l'eliminazione dell'artista: " + error);
       console.error("Errore durante l'eliminazione dell'artista:", error);
     });
+
+  chiudiModal("artisti");
 }
 
-function toggleAttivo(codiceArtista, isChecked) {
-  console.log(codiceArtista, isChecked);
-  fetch("/artisti/toggle/" + codiceArtista, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      attivo: isChecked,
-    }),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        showErrorMessage("Errore: " + response.error);
-      } else {
-        showSuccessMessage("Modifica all'artista avvenuta con successo!");
-      }
-    })
-    .then((data) => {
-      console.log("Artist attivo status updated successfully");
-    })
-    .catch((error) => {
-      showErrorMessage("Errore: " + error);
-      console.error("There was a problem with the fetch operation:", error);
-    });
-}
-
-// Aggiungi questo script alla fine della tua pagina o al suo interno
-
-// Funzione per filtrare la tabella in base al nome artista
 function filterArtists() {
   // Prendi il valore dalla barra di ricerca
   var input, filter, table, tr, td, i, txtValue;
@@ -78,8 +52,9 @@ function filterArtists() {
   tr = table.getElementsByTagName("tr");
 
   // Per ogni riga della tabella, controlla se il nome artista corrisponde alla ricerca
-  for (i = 0; i < tr.length; i++) {
-    td = tr[i].getElementsByTagName("td")[0]; // La prima cella contiene il nome artista
+  for (i = 1; i < tr.length; i++) {
+    // Start from 1 to skip the header row
+    td = tr[i].getElementsByTagName("td")[1]; // The second cell contains the artist's name
     if (td) {
       txtValue = td.textContent || td.innerText;
       if (txtValue.toUpperCase().indexOf(filter) > -1) {
@@ -87,29 +62,33 @@ function filterArtists() {
       } else {
         tr[i].style.display = "none";
       }
+    } else {
+      tr[i].style.display = "none"; // Nascondi la riga se la cella non esiste
     }
   }
 }
 
 function filterImages() {
   // Prendi il valore dalla barra di ricerca
-  var input, filter, table, tr, td, i, txtValue;
+  var input, filter, table, tbody, tr, td, i, txtValue;
   input = document.getElementById("simple-search-img");
   filter = input.value.toUpperCase();
   table = document.querySelector("table");
-  tr = table.getElementsByTagName("tr");
+  tbody = table.querySelector("tbody");
+  tr = tbody.getElementsByTagName("tr");
 
-  // Per ogni riga della tabella, controlla se il nome artista corrisponde alla ricerca
+  // Per ogni riga della tabella, controlla se il nome immagine corrisponde alla ricerca
   for (i = 0; i < tr.length; i++) {
-    td = tr[i].getElementsByTagName("td")[0]; // La prima cella contiene il nome artista
-    console.log(td);
+    td = tr[i].getElementsByTagName("td")[0]; // La prima cella contiene il nome immagine
     if (td) {
       txtValue = td.textContent || td.innerText;
       if (txtValue.toUpperCase().indexOf(filter) > -1) {
-        tr[i].style.display = "";
+        tr[i].style.display = ""; // Mostra la riga
       } else {
-        tr[i].style.display = "none";
+        tr[i].style.display = "none"; // Nascondi la riga
       }
+    } else {
+      tr[i].style.display = "none"; // Nascondi la riga se la cella non esiste
     }
   }
 }
@@ -134,7 +113,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (dropzoneFileInput && previewImage && uploadButton) {
     initializeDropzone(dropzoneFileInput, previewImage, uploadButton);
-    initializeUploadButton(uploadButton, dropzoneFileInput);
+    initializeUploadButton(uploadButton, dropzoneFileInput, previewImage);
   }
 });
 
@@ -156,7 +135,8 @@ function initializeDropzone(dropzoneFileInput, previewImage, uploadButton) {
   });
 }
 
-function initializeUploadButton(uploadButton, dropzoneFileInput) {
+// Initialize Upload Button
+function initializeUploadButton(uploadButton, dropzoneFileInput, previewImage) {
   uploadButton.addEventListener("click", async function () {
     uploadButton.classList.add("hidden");
 
@@ -167,63 +147,56 @@ function initializeUploadButton(uploadButton, dropzoneFileInput) {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(
-        "./upload/" + encodeURIComponent(file.name.trim()),
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      const result = await response.json();
-      console.log("Upload result:", result);
-
-      if (response.ok) {
-        showSuccessMessage("Caricamento avvenuto con successo!");
-        window.location.reload();
-      } else {
-        showErrorMessage(result.error);
-      }
+      fetch("./upload/" + encodeURIComponent(file.name.trim()), {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => response.text())
+        .then((data) => {
+          aggiornaTabella(data, "tabella_immagini");
+          resetDropzone(dropzoneFileInput, previewImage, uploadButton);
+        })
+        .catch((error) => console.error("Error:", error));
     } catch (error) {
       console.error("Error during upload:", error);
+      showErrorMessage("Errore durante il caricamento del file.");
     }
   });
 }
 
-function deleteImmagine() {
-  var name = document.getElementById("filename").value;
+function resetDropzone(dropzoneFileInput, previewImage, uploadButton) {
+  dropzoneFileInput.value = ""; // Clear the file input
+  previewImage.src = ""; // Clear the preview image
+  previewImage.classList.add("hidden"); // Hide the preview image
+  document
+    .querySelector(".flex.flex-col.items-center.justify-center.pt-5.pb-6")
+    .classList.remove("hidden"); // Show the initial dropzone text
+  uploadButton.classList.add("hidden"); // Hide the upload button again
 
-  // Costruisci l'oggetto con i dati da inviare nel corpo della richiesta DELETE
+  // Re-initialize the dropzone
+  initializeDropzone(dropzoneFileInput, previewImage, uploadButton);
+}
+
+// Delete Image
+function deleteImmagine() {
+  const name = document.getElementById("filename").value;
+
   const data = {
     filename: name,
   };
 
-  // Opzioni della richiesta
-  const options = {
+  fetch("./delete", {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(data),
-  };
+  })
+    .then((response) => response.text())
+    .then((data) => aggiornaTabella(data, "tabella_immagini"))
+    .catch((error) => console.error("Error:", error));
 
-  // Effettua la richiesta DELETE
-  fetch("./delete", options)
-    .then((response) => {
-      if (response.ok) {
-        showSuccessMessage("Immagine eliminata con successo!");
-        window.location.reload();
-      } else {
-        // Se la richiesta ha fallito, gestisci l'errore
-        console.error("Error deleting image:", response.statusText);
-        showErrorMessage("Errore durante l'eliminazione dell'immagine.");
-      }
-    })
-    .catch((error) => {
-      // Se c'è stato un errore durante l'esecuzione della richiesta, gestiscilo
-      console.error("Error deleting image:", error);
-      showErrorMessage("Errore durante l'eliminazione dell'immagine.");
-    });
+  chiudiModal("immagini");
 }
 
 function showSuccessMessage(messageText) {
@@ -283,59 +256,89 @@ document.onreadystatechange = function () {
   var state = document.readyState;
   document.getElementById("contents").style.visibility = "hidden";
   if (state == "complete") {
-    setTimeout(function () {
-      document.getElementById("load").style.visibility = "hidden";
-      document.getElementById("contents").style.visibility = "visible";
-      document.onreadystatechange = null; // Rimuove il listener per evitare ulteriori chiamate
-    }, 1000);
+    document.getElementById("load").style.visibility = "hidden";
+    document.getElementById("contents").style.visibility = "visible";
+    document.onreadystatechange = null; // Rimuove il listener per evitare ulteriori chiamate
   }
 };
 
-function spostaSu(codiceArtista) {
-  document.getElementById("load").style.visibility = "visible";
-  fetch("/artisti/" + codiceArtista + "/up", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
-    .then((response) => {
-      if (!response.ok) {
-        showErrorMessage("Errore: " + response.error);
-      } else {
-        window.location.reload();
-      }
-    })
-    .then((data) => {
-      console.log("Artist attivo status updated successfully");
-    })
-    .catch((error) => {
-      showErrorMessage("Errore: " + error);
-      console.error("There was a problem with the fetch operation:", error);
-    });
+function aggiornaTabella(response, nomeTabella) {
+  const tabella = document.getElementById(nomeTabella);
+  tabella.innerHTML = response;
+  showSuccessMessage("Tabella degli artisti aggiornata con successo!");
 }
 
-function spostaGiu(codiceArtista) {
-  document.getElementById("load").style.visibility = "visible";
-
-  fetch("/artisti/" + codiceArtista + "/down", {
+// Toggle function
+function toggleAttivo(codice, attivo) {
+  fetch(`/artisti/toggle/${codice}`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ attivo }),
   })
-    .then((response) => {
-      if (!response.ok) {
-        showErrorMessage("Errore: " + response.error);
-      } else {
-        window.location.reload();
-      }
-    })
-    .then((data) => {
-      console.log("Artist attivo status updated successfully");
-    })
-    .catch((error) => {
-      showErrorMessage("Errore: " + error);
-      console.error("There was a problem with the fetch operation:", error);
-    });
+    .then((response) => response.text())
+    .then((data) => aggiornaTabella(data, "tabella_artisti"))
+    .catch((error) => console.error("Error:", error));
+}
+
+// Move up function
+async function spostaSu(codice) {
+  await fetch(`/artisti/${codice}/up`, {
+    method: "POST",
+  })
+    .then((response) => response.text())
+    .then((data) => aggiornaTabella(data, "tabella_artisti"))
+    .catch((error) => console.error("Error:", error));
+}
+
+// Move down function
+async function spostaGiu(codice) {
+  await fetch(`/artisti/${codice}/down`, {
+    method: "POST",
+  })
+    .then((response) => response.text())
+    .then((data) => aggiornaTabella(data, "tabella_artisti"))
+    .catch((error) => console.error("Error:", error));
+}
+
+async function spostaInCima(codice) {
+  await fetch(`/artisti/${codice}/top`, {
+    method: "POST",
+  })
+    .then((response) => response.text())
+    .then((data) => aggiornaTabella(data, "tabella_artisti"))
+    .catch((error) => console.error("Error:", error));
+}
+
+// Move down function
+async function spostaInFondo(codice) {
+  await fetch(`/artisti/${codice}/bottom`, {
+    method: "POST",
+  })
+    .then((response) => response.text())
+    .then((data) => aggiornaTabella(data, "tabella_artisti"))
+    .catch((error) => console.error("Error:", error));
+}
+
+function apriModal(tipo) {
+  var modal = document.getElementById("popup-modal-" + tipo);
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+
+  // Aggiungi lo sfondo opaco
+  var overlay = document.createElement("div");
+  overlay.id = "modal-overlay";
+  overlay.className = "fixed inset-0 bg-black bg-opacity-50 z-40";
+  document.body.appendChild(overlay);
+}
+
+function chiudiModal(tipo) {
+  var modal = document.getElementById("popup-modal-" + tipo);
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+
+  // Rimuovi lo sfondo opaco
+  var overlay = document.getElementById("modal-overlay");
+  if (overlay) {
+    overlay.remove();
+  }
 }
