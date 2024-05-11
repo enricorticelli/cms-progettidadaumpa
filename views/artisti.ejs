@@ -25,23 +25,26 @@
     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
       <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
         <tr>
+          <th scope="col" class="px-4 py-3">Ordine</th>
           <th scope="col" class="px-4 py-3">Nome</th>
-          <th scope="col" class="px-4 py-3">Biografia</th>
           <th scope="col" class="px-4 py-3">Attivo</th>
           <th scope="col" class="px-4 py-3">Data creazione</th>
           <th scope="col" class="px-4 py-3">Data ultima modifica</th>
           <th scope="col" class="px-4 py-3">
             <span class="sr-only">Azioni</span>
           </th>
+          <th scope="col" class="px-4 py-3">Sposta</th>
         </tr>
       </thead>
       <tbody>
         <% artisti.forEach(artista => { %>
         <tr class="border-b dark:border-gray-700">
+          <td class="px-4 py-3 flex items-center justify-center">
+            <b><%= artista.ordine %></b>
+          </td>
           <td scope="row" class="px-4 py-3 font-medium text-gray-900 dark:text-white">
             <%= artista.nome %>
           </td>
-          <td class="px-4 py-3"><%= artista.descrizione ? artista.descrizione.slice(0, 40) + '...' : 'Nessuna biografia' %></td>
           <td class="px-4 py-3">
             <label title="Attiva/Disattiva" class="inline-flex items-center mb-5 cursor-pointer">
               <input type="checkbox" <%= artista.attivo ? 'checked' : '' %> onclick="toggleAttivo('<%= artista.codice %>', this.checked)" value="" class="sr-only peer">
@@ -49,6 +52,7 @@
               <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"></span>
             </label>
           </td>
+
           <td class="px-4 py-3">
             <%= artista.data_aggiunta.toLocaleString() %>
           </td>
@@ -66,6 +70,22 @@
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
               </svg>
             </button>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex items-center justify-center">
+              <kbd onclick="spostaSu('<%= artista.codice %>')" class="mr-1 cursor-pointer inline-flex items-center px-2 py-1.5 text-gray-800 bg-gray-100 border border-gray-200 hover:bg-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">
+                <svg class="w-2.5 h-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 10">
+                  <path d="M9.207 1A2 2 0 0 0 6.38 1L.793 6.586A2 2 0 0 0 2.207 10H13.38a2 2 0 0 0 1.414-3.414L9.207 1Z" />
+                </svg>
+                <span class="sr-only">Arrow key up</span>
+              </kbd>
+              <kbd onclick="spostaGiu('<%= artista.codice %>')" class="ml-1 cursor-pointer inline-flex items-center px-2 py-1.5 text-gray-800 bg-gray-100 border border-gray-200 hover:bg-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">
+                <svg class="w-2.5 h-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 10">
+                  <path d="M15.434 1.235A2 2 0 0 0 13.586 0H2.414A2 2 0 0 0 1 3.414L6.586 9a2 2 0 0 0 2.828 0L15 3.414a2 2 0 0 0 .434-2.179Z" />
+                </svg>
+                <span class="sr-only">Arrow key down</span>
+              </kbd>
+            </div>
           </td>
         </tr>
         <% }); %>
