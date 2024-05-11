@@ -94,23 +94,13 @@ async function spostaSu(codice) {
   const client = await pool.connect();
 
   try {
-    // Trova l'ordine dell'artista da spostare
-    const currentArtist = await client.query(
-      `
-      SELECT id, ordine
-      FROM artisti
-      WHERE id = $1
-      `,
-      [codice]
-    );
-
     // Sposta l'artista verso l'alto e abbassa l'ordine dell'artista sopra
     const updateResult1 = await client.query(
       `
       UPDATE artisti AS a1
-      SET ordine = a1.ordine + 1
-      FROM (SELECT ordine FROM artisti WHERE id = $1) AS current_artist
-      WHERE a1.ordine = current_artist.ordine - 1
+      SET ordine = a1.ordine - 1
+      FROM (SELECT ordine FROM artisti WHERE codice = $1) AS current_artist
+      WHERE a1.ordine = current_artist.ordine
       AND current_artist.ordine > 1;
       `,
       [codice]
@@ -121,7 +111,7 @@ async function spostaSu(codice) {
       `
       UPDATE artisti
       SET ordine = ordine - 1
-      WHERE id = $1
+      WHERE codice = $1
       AND ordine > 1;
       `,
       [codice]
@@ -139,16 +129,6 @@ async function spostaGiu(codice) {
   const client = await pool.connect();
 
   try {
-    // Trova l'ordine dell'artista da spostare
-    const currentArtist = await client.query(
-      `
-      SELECT id, ordine
-      FROM artisti
-      WHERE codice = $1
-      `,
-      [codice]
-    );
-
     // Sposta l'artista verso il basso e aumenta l'ordine dell'artista sotto
     const updateResult1 = await client.query(
       `
