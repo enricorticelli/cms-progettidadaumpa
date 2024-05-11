@@ -41,14 +41,15 @@ router.post("/search", requiresAuth(), async (req, res) => {
       maxResults,
       prefix, // Include prefix in the options
     };
-    var filesData = res.locals.myCache.get("filesData_search_" + prefix);
+    var filesData = res.locals.myCache.get("filesData" + prefix);
     if (filesData !== undefined) {
-      console.log("filesData_search_" + prefix + " found in CACHE");
+      console.log("filesData" + prefix + " found in CACHE");
     } else {
-      console.log("filesData_search_" + prefix + " CACHED");
+      console.log("filesData" + prefix + " CACHED");
       filesData = await getFilesData(res.locals.bucket, options);
-      res.locals.myCache.set("filesData_search_" + prefix, filesData);
+      res.locals.myCache.set("filesData" + prefix, filesData);
     }
+    console.log(filesData);
     res.render("partials/table_immagini", { files: filesData }); // Send updated table partial
   } catch (error) {
     console.error("Error downloading all files:", error);
