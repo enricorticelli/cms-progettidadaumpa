@@ -68,43 +68,12 @@ function filterArtists() {
   }
 }
 
-function filterImages() {
-  // Prendi il valore dalla barra di ricerca
-  var input, filter, table, tbody, tr, td, i, txtValue;
-  input = document.getElementById("simple-search-img");
-  filter = input.value.toUpperCase();
-  table = document.querySelector("table");
-  tbody = table.querySelector("tbody");
-  tr = tbody.getElementsByTagName("tr");
-
-  // Per ogni riga della tabella, controlla se il nome immagine corrisponde alla ricerca
-  for (i = 0; i < tr.length; i++) {
-    td = tr[i].getElementsByTagName("td")[0]; // La prima cella contiene il nome immagine
-    if (td) {
-      txtValue = td.textContent || td.innerText;
-      if (txtValue.toUpperCase().indexOf(filter) > -1) {
-        tr[i].style.display = ""; // Mostra la riga
-      } else {
-        tr[i].style.display = "none"; // Nascondi la riga
-      }
-    } else {
-      tr[i].style.display = "none"; // Nascondi la riga se la cella non esiste
-    }
-  }
-}
-
 document.addEventListener("DOMContentLoaded", function () {
   // Verifica se siamo sulla pagina corretta prima di associare l'evento
   if (document.getElementById("simple-search")) {
     document
       .getElementById("simple-search")
       .addEventListener("keyup", filterArtists);
-  }
-
-  if (document.getElementById("simple-search-img")) {
-    document
-      .getElementById("simple-search-img")
-      .addEventListener("keyup", filterImages);
   }
 
   const dropzoneFileInput = document.getElementById("dropzone-file");
@@ -153,7 +122,7 @@ function initializeUploadButton(uploadButton, dropzoneFileInput, previewImage) {
       })
         .then((response) => response.text())
         .then((data) => {
-          aggiornaTabella(data, "tabella_immagini");
+          aggiornaTabella(data, "tabella_immagini", true);
           resetDropzone(dropzoneFileInput, previewImage, uploadButton);
         })
         .catch((error) => console.error("Error:", error));
@@ -162,6 +131,37 @@ function initializeUploadButton(uploadButton, dropzoneFileInput, previewImage) {
       showErrorMessage("Errore durante il caricamento del file.");
     }
   });
+}
+
+if (document.getElementById("search-form")) {
+  document
+    .getElementById("search-form")
+    .addEventListener("submit", function (event) {
+      event.preventDefault();
+      const formData = new FormData(this);
+
+      // Convert FormData to JSON object
+      const formDataObj = {};
+      formData.forEach((value, key) => {
+        formDataObj[key] = value;
+      });
+
+      // Debug: Log the JSON object
+      console.log("FormData as JSON:", formDataObj);
+
+      fetch("../immagini/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formDataObj), // Send as JSON
+      })
+        .then((response) => response.text()) // Assuming the response is HTML
+        .then((data) => {
+          aggiornaTabella(data, "tabella_immagini", false);
+        })
+        .catch((error) => console.error("Error:", error));
+    });
 }
 
 function resetDropzone(dropzoneFileInput, previewImage, uploadButton) {
@@ -193,7 +193,7 @@ function deleteImmagine() {
     body: JSON.stringify(data),
   })
     .then((response) => response.text())
-    .then((data) => aggiornaTabella(data, "tabella_immagini"))
+    .then((data) => aggiornaTabella(data, "tabella_immagini", true))
     .catch((error) => console.error("Error:", error));
 
   chiudiModal("immagini");
@@ -262,10 +262,12 @@ document.onreadystatechange = function () {
   }
 };
 
-function aggiornaTabella(response, nomeTabella) {
+function aggiornaTabella(response, nomeTabella, notify) {
   const tabella = document.getElementById(nomeTabella);
   tabella.innerHTML = response;
-  showSuccessMessage("Tabella degli artisti aggiornata con successo!");
+  if (notify) {
+    showSuccessMessage("Tabella degli artisti aggiornata con successo!");
+  }
 }
 
 // Toggle function
@@ -276,7 +278,7 @@ function toggleAttivo(codice, attivo) {
     body: JSON.stringify({ attivo }),
   })
     .then((response) => response.text())
-    .then((data) => aggiornaTabella(data, "tabella_artisti"))
+    .then((data) => aggiornaTabella(data, "tabella_artisti", true))
     .catch((error) => console.error("Error:", error));
 }
 
@@ -286,7 +288,7 @@ async function spostaSu(codice) {
     method: "POST",
   })
     .then((response) => response.text())
-    .then((data) => aggiornaTabella(data, "tabella_artisti"))
+    .then((data) => aggiornaTabella(data, "tabella_artisti", true))
     .catch((error) => console.error("Error:", error));
 }
 
@@ -296,7 +298,7 @@ async function spostaGiu(codice) {
     method: "POST",
   })
     .then((response) => response.text())
-    .then((data) => aggiornaTabella(data, "tabella_artisti"))
+    .then((data) => aggiornaTabella(data, "tabella_artisti", true))
     .catch((error) => console.error("Error:", error));
 }
 
@@ -305,7 +307,7 @@ async function spostaInCima(codice) {
     method: "POST",
   })
     .then((response) => response.text())
-    .then((data) => aggiornaTabella(data, "tabella_artisti"))
+    .then((data) => aggiornaTabella(data, "tabella_artisti", true))
     .catch((error) => console.error("Error:", error));
 }
 
@@ -315,7 +317,7 @@ async function spostaInFondo(codice) {
     method: "POST",
   })
     .then((response) => response.text())
-    .then((data) => aggiornaTabella(data, "tabella_artisti"))
+    .then((data) => aggiornaTabella(data, "tabella_artisti", true))
     .catch((error) => console.error("Error:", error));
 }
 

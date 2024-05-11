@@ -14,20 +14,42 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.get("/", requiresAuth(), async (req, res) => {
   try {
-    const { maxResults = undefined, pageToken = undefined } = req.body;
+    const { maxResults = 10, prefix = "" } = req.body; // Added prefix to the request body
     const options = {
       maxResults,
-      pageToken,
+      prefix, // Include prefix in the options
     };
     var filesData = res.locals.myCache.get("filesData");
     if (filesData !== undefined) {
       console.log("FilesData found in CACHE");
     } else {
       console.log("FilesData CACHED");
-      filesData = await getFilesData(res.locals.bucket);
+      filesData = await getFilesData(res.locals.bucket, options);
       res.locals.myCache.set("filesData", filesData);
     }
     res.render("immagini", { files: filesData });
+  } catch (error) {
+    console.error("Error downloading all files:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+router.post("/search", requiresAuth(), async (req, res) => {
+  try {
+    const { maxResults = 10, prefix = "" } = req.body; // Added prefix to the request body
+    const options = {
+      maxResults,
+      prefix, // Include prefix in the options
+    };
+    var filesData = res.locals.myCache.get("filesData_search_" + prefix);
+    if (filesData !== undefined) {
+      console.log("filesData_search_" + prefix + " found in CACHE");
+    } else {
+      console.log("filesData_search_" + prefix + " CACHED");
+      filesData = await getFilesData(res.locals.bucket, options);
+      res.locals.myCache.set("filesData_search_" + prefix, filesData);
+    }
+    res.render("partials/table_immagini", { files: filesData }); // Send updated table partial
   } catch (error) {
     console.error("Error downloading all files:", error);
     res.status(500).send("Internal Server Error");

@@ -1,7 +1,7 @@
 // utils.js
 
-const { v4: uuidv4 } = require('uuid');
-const axios = require('axios');
+const { v4: uuidv4 } = require("uuid");
+const axios = require("axios");
 
 function formatDate(date) {
   const options = {
@@ -20,19 +20,19 @@ async function downloadFile(url, res) {
   try {
     const response = await axios({
       url: url,
-      method: 'GET',
-      responseType: 'stream'
+      method: "GET",
+      responseType: "stream",
     });
     setResponseHeadersForDownload(res);
     response.data.pipe(res);
   } catch (error) {
-    console.error('Error downloading file:', error);
-    res.status(500).send('Internal Server Error');
+    console.error("Error downloading file:", error);
+    res.status(500).send("Internal Server Error");
   }
 }
 
 function setResponseHeadersForDownload(res) {
-  res.setHeader('Content-disposition', 'attachment; filename=downloaded_file');
+  res.setHeader("Content-disposition", "attachment; filename=downloaded_file");
 }
 
 async function uploadFile(bucket, fileName, buffer) {
@@ -40,19 +40,19 @@ async function uploadFile(bucket, fileName, buffer) {
   const uploadStream = file.createWriteStream({
     metadata: {
       metadata: {
-        firebaseStorageDownloadTokens: uuidv4()
-      }
-    }
+        firebaseStorageDownloadTokens: uuidv4(),
+      },
+    },
   });
 
-  uploadStream.on('error', (err) => {
-    console.error('Error uploading file:', err);
+  uploadStream.on("error", (err) => {
+    console.error("Error uploading file:", err);
     throw new Error("Internal server error.");
   });
 
   return new Promise((resolve, reject) => {
-    uploadStream.on('finish', () => {
-      console.log('File uploaded successfully.');
+    uploadStream.on("finish", () => {
+      console.log("File uploaded successfully.");
       resolve();
     });
     uploadStream.end(buffer);
@@ -60,12 +60,19 @@ async function uploadFile(bucket, fileName, buffer) {
 }
 
 async function getFilesData(bucket, options = {}) {
-  const [files] = await bucket.getFiles(options);
+  const { prefix, ...restOptions } = options; // Extract prefix and other options
+  const [files] = await bucket.getFiles({
+    ...restOptions,
+    prefix, // Use prefix option in getFiles
+  });
+
   if (!files || files.length === 0) {
     return [];
   }
 
-  files.sort((a, b) => b.metadata.timeCreated.localeCompare(a.metadata.timeCreated));
+  files.sort((a, b) =>
+    b.metadata.timeCreated.localeCompare(a.metadata.timeCreated)
+  );
 
   return files.map((file) => {
     const uploadDate = new Date(file.metadata.timeCreated);
@@ -82,5 +89,5 @@ async function getFilesData(bucket, options = {}) {
 module.exports = {
   downloadFile,
   uploadFile,
-  getFilesData
+  getFilesData,
 };
