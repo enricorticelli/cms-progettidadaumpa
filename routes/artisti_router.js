@@ -6,9 +6,9 @@ const { getFilesData } = require("../services/immagini_service");
 const {
   getAllArtists,
   getArtistByCode,
-  getEmptyArtist,
   deleteArtist,
   toggleArtist,
+  createArtist,
   updateArtist,
   spostaSu,
   spostaGiu,
@@ -37,9 +37,21 @@ router.get("/", requiresAuth(), async function (req, res, next) {
   }
 });
 
-//GET NEW
 router.get("/nuovo", requiresAuth(), async function (req, res, next) {
-  const emptyArtist = await getEmptyArtist();
+  const userName = req.oidc.user.name;
+
+  const emptyArtist = {
+    codice: "nuovo",
+    nome: "",
+    sito: "",
+    descrizione: "",
+    sezione_2: "",
+    spettacoli: "",
+    img1: "",
+    img2: "",
+    img3: "",
+    img4: "",
+  };
 
   var filesData = res.locals.myCache.get("filesData");
   if (filesData !== undefined) {
@@ -57,19 +69,31 @@ router.get("/nuovo", requiresAuth(), async function (req, res, next) {
   });
 });
 
-//GET
+router.post("/nuovo", requiresAuth(), async function (req, res, next) {
+  const body = req.body;
+  try {
+    const newArtist = await createArtist(body);
+
+    var artisti = res.locals.myCache.get("artisti");
+    if (artisti === undefined) {
+      artisti = await getAllArtists();
+    } else {
+      console.log("New artist added to CACHE");
+      artisti.push(newArtist);
+      res.locals.myCache.set("artisti", artisti);
+    }
+
+    res.redirect(`/artisti`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Errore durante la creazione del nuovo artista");
+  }
+});
+
 router.get("/:codice", requiresAuth(), async function (req, res, next) {
   const codice = req.params.codice;
-
   try {
-    var artistData = res.locals.myCache.get("artistData_" + codice);
-    if (artistData !== undefined) {
-      console.log("ArtistData_" + codice + " found in cache");
-    } else {
-      console.log("ArtistData_" + codice + " CACHED");
-      artistData = await getArtistByCode(codice);
-      res.locals.myCache.set("artistData_" + codice, artistData);
-    }
+    const artist = await getArtistByCode(codice);
 
     var filesData = res.locals.myCache.get("filesData");
     if (filesData !== undefined) {
@@ -82,31 +106,38 @@ router.get("/:codice", requiresAuth(), async function (req, res, next) {
 
     res.render("scheda_artista", {
       editMode: true,
-      artista: artistData,
+      artista: artist,
       files: filesData,
     });
   } catch (err) {
     console.error(err);
-    res
-      .status(500)
-      .send("Errore durante il recupero dei dati dalla tabella artisti");
+    res.status(500).send("Errore durante il recupero dell'artista");
   }
 });
 
-//UPDATE
 router.post("/:codice", requiresAuth(), async function (req, res, next) {
   const codice = req.params.codice;
   const body = req.body;
-
   try {
-    await updateArtist(codice, body);
-    eliminaCacheArtisti(res.locals.myCache);
-    console.log("Artisti removed from CACHE");
+    const updatedArtist = await updateArtist(codice, body);
 
-    res.redirect("/artisti");
+    var artisti = res.locals.myCache.get("artisti");
+    if (artisti === undefined) {
+      artisti = await getAllArtists();
+    } else {
+      const index = artisti.findIndex((artist) => artist.codice === codice);
+      if (index !== -1) {
+        console.log("Artist updated in CACHE");
+        artisti[index] = updatedArtist;
+      }
+    }
+
+    res.locals.myCache.set("artisti", artisti);
+
+    res.redirect(`/artisti`);
   } catch (err) {
-    console.error("Errore durante l'aggiornamento dell'artista:", err);
-    res.status(500).send("Errore durante l'aggiornamento dell'artista");
+    console.error(err);
+    res.status(500).send("Errore durante la modifica dell'artista");
   }
 });
 
@@ -115,8 +146,18 @@ router.delete("/:codice", requiresAuth(), async function (req, res, next) {
   const codice = req.params.codice;
 
   try {
-    artisti = await deleteArtist(codice);
-    res.locals.myCache.set("artisti", artisti);
+    await deleteArtist(codice);
+
+    // Remove artist from cache
+    var artisti = res.locals.myCache.get("artisti");
+    if (artisti !== undefined) {
+      const index = artisti.findIndex((artist) => artist.codice === codice);
+      if (index !== -1) {
+        console.log("Artist removed from CACHE");
+        artisti.splice(index, 1);
+        res.locals.myCache.set("artisti", artisti);
+      }
+    }
 
     console.log("Artista eliminato con successo");
     res.render("partials/table_artisti", { artisti });
@@ -127,16 +168,27 @@ router.delete("/:codice", requiresAuth(), async function (req, res, next) {
 });
 
 //TOGGLE
-router.post("/toggle/:codice", requiresAuth(), async function (req, res, next) {
+router.post("/:codice/toggle", requiresAuth(), async function (req, res, next) {
   const codice = req.params.codice;
   const attivo = req.body.attivo;
 
   try {
-    artisti = await toggleArtist(codice, attivo);
+    const updatedArtist = await toggleArtist(codice, attivo);
+
+    var artisti = res.locals.myCache.get("artisti");
+    if (artisti === undefined) {
+      artisti = await getAllArtists();
+    } else {
+      const index = artisti.findIndex((artist) => artist.codice === codice);
+      if (index !== -1) {
+        console.log("Artist updated in CACHE");
+        artisti[index] = updatedArtist;
+      }
+    }
     res.locals.myCache.set("artisti", artisti);
 
     console.log("Stato 'attivo' dell'artista aggiornato con successo");
-    res.sendStatus(204); // Risposta di successo senza contenuto
+    res.render("partials/table_artisti", { artisti }); // Send updated table partial
   } catch (err) {
     console.error(
       "Errore durante l'aggiornamento dello stato 'attivo' dell'artista:",
@@ -153,7 +205,9 @@ router.post("/:codice/up", requiresAuth(), async function (req, res, next) {
   const codice = req.params.codice;
 
   try {
-    artisti = await spostaSu(codice);
+    await spostaSu(codice);
+
+    artisti = await getAllArtists();
     res.locals.myCache.set("artisti", artisti);
 
     console.log("Artista spostato su");
@@ -173,7 +227,9 @@ router.post("/:codice/down", requiresAuth(), async function (req, res, next) {
   const codice = req.params.codice;
 
   try {
-    artisti = await spostaGiu(codice);
+    await spostaGiu(codice);
+
+    artisti = await getAllArtists();
     res.locals.myCache.set("artisti", artisti);
 
     console.log("Artista spostato giù");
@@ -194,7 +250,9 @@ router.post("/:codice/top", requiresAuth(), async function (req, res, next) {
   const codice = req.params.codice;
 
   try {
-    artisti = await spostaInCima(codice);
+    await spostaInCima(codice);
+
+    artisti = await getAllArtists();
     res.locals.myCache.set("artisti", artisti);
 
     console.log("Artista spostato su");
@@ -214,7 +272,9 @@ router.post("/:codice/bottom", requiresAuth(), async function (req, res, next) {
   const codice = req.params.codice;
 
   try {
-    artisti = await spostaInFondo(codice);
+    await spostaInFondo(codice);
+
+    artisti = await getAllArtists();
     res.locals.myCache.set("artisti", artisti);
 
     console.log("Artista spostato giù");
@@ -230,18 +290,5 @@ router.post("/:codice/bottom", requiresAuth(), async function (req, res, next) {
       .send("Errore durante l'aggiornamento dello stato 'attivo' dell'artista");
   }
 });
-
-function eliminaCacheArtisti(myCache) {
-  myCache.del("artisti");
-  console.log("Removed artist from CACHE");
-
-  const keys = myCache.keys();
-  keys.forEach((key) => {
-    if (key.includes("artistData_")) {
-      myCache.del(key);
-      console.log("Removed " + key + " from CACHE");
-    }
-  });
-}
 
 module.exports = router;

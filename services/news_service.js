@@ -43,13 +43,13 @@ async function createArticle(
   sottotitolo,
   contenuto,
   autore,
-  imgArticolo
+  immagine_url
 ) {
   const client = await pool.connect();
   try {
     const result = await client.query(
       `INSERT INTO articoli (titolo, sottotitolo, contenuto, autore, immagine_url) VALUES ($1, $2, $3, $4, $5) RETURNING *;`,
-      [titolo, sottotitolo, contenuto, autore, imgArticolo]
+      [titolo, sottotitolo, contenuto, autore, immagine_url]
     );
     return result.rows[0];
   } catch (err) {
@@ -65,13 +65,13 @@ async function updateArticle(
   sottotitolo,
   contenuto,
   autore,
-  imgArticolo
+  immagine_url
 ) {
   const client = await pool.connect();
   try {
     const result = await client.query(
       `UPDATE articoli SET titolo = $1, sottotitolo = $2, contenuto = $3, autore = $4, immagine_url = $5 WHERE id = $6 RETURNING *;`,
-      [titolo, sottotitolo, contenuto, autore, imgArticolo, id]
+      [titolo, sottotitolo, contenuto, autore, immagine_url, id]
     );
     return result.rows[0];
   } catch (err) {
