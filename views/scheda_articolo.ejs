@@ -1,0 +1,45 @@
+<%- include('partials/header') -%>
+
+<div class="relative p-4 bg-white rounded-lg dark:bg-gray-800 sm:p-5">
+  <form action="./<%= articolo.id %>" method="POST">
+    <div class="grid gap-4 mb-6 sm:grid-cols-3">
+      <div class="sm:col-span-3">
+        <label for="titolo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Titolo</label>
+        <input required type="text" name="titolo" id="titolo" value="<%= articolo.titolo %>" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Inserire del testo...">
+      </div>
+      <div class="sm:col-span-3">
+        <label for="sottotitolo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sottotitolo</label>
+        <input type="text" name="sottotitolo" id="sottotitolo" value="<%= articolo.sottotitolo %>" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Inserire del testo...">
+      </div>
+      <div class="sm:col-span-3">
+        <label for="contenuto" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Contenuto</label>
+        <textarea required id="contenuto" placeholder="Inserire testo..." rows="4" name="contenuto" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"><%= articolo.contenuto %></textarea>
+      </div>
+      <div class="sm:col-span-3">
+        <input type="hidden" name="autore" id="autore" value="<%= articolo.autore %>" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Inserire del testo...">
+      </div>
+      <div class="sm:col-span-2">
+        <label for="imgArticolo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">URL Immagine</label>
+        <input required onclick="salvaIdImmagine('Articolo')" data-modal-target="modal-immagini" data-modal-toggle="modal-immagini" type="text" name="immagine_url" id="imgArticolo" value="<%= articolo.immagine_url %>" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Inserire URL immagine">
+      </div>
+      <div class="sm:col-span-1 flex justify-center items-center">
+        <img id="imgPreviewArticolo" src="<%= articolo.immagine_url %>" class="max-w-full h-auto max-h-24">
+      </div>
+    </div>
+    <div class="mt-8 flex justify-center">
+      <button type="submit" class="text-white bg-gradient-to-br from-pink-500 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800 font-medium rounded-lg text-base px-5 py-2.5 text-center me-2 mb-2">
+        <% if (editMode) { %>
+        Applica modifiche
+        <% } else { %>
+        Aggiungi articolo
+        <% } %>
+      </button>
+    </div>
+  </form>
+</div>
+
+<input type="hidden" id="idImmagine" />
+
+<%- include('partials/modal_immagini') -%>
+
+<%- include('partials/footer') -%>

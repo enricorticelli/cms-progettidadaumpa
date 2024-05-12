@@ -1,19 +1,32 @@
-// utils.js
-
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
+const { formatDate } = require("../services/utils");
 
-function formatDate(date) {
-  const options = {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  };
-  const formattedDate = date.toLocaleDateString("it-IT", options);
-  return formattedDate.replace(",", ""); // Rimuove la virgola dopo la data
+async function getFilesData(bucket, options = {}) {
+  const { prefix, ...restOptions } = options; // Extract prefix and other options
+  const [files] = await bucket.getFiles({
+    ...restOptions,
+    prefix, // Use prefix option in getFiles
+  });
+
+  if (!files || files.length === 0) {
+    return [];
+  }
+
+  files.sort((a, b) =>
+    b.metadata.timeCreated.localeCompare(a.metadata.timeCreated)
+  );
+
+  return files.map((file) => {
+    const uploadDate = new Date(file.metadata.timeCreated);
+    const formattedDate = formatDate(uploadDate);
+    return {
+      filename: file.name,
+      uploadedAt: formattedDate,
+      url: `https://firebasestorage.googleapis.com/v0/b/${file.metadata.bucket}/o/${file.name}?alt=media`,
+      downloadUrl: `https://firebasestorage.googleapis.com/v0/b/${file.metadata.bucket}/o/${file.name}?alt=media`,
+    };
+  });
 }
 
 async function downloadFile(url, res) {
@@ -56,33 +69,6 @@ async function uploadFile(bucket, fileName, buffer) {
       resolve();
     });
     uploadStream.end(buffer);
-  });
-}
-
-async function getFilesData(bucket, options = {}) {
-  const { prefix, ...restOptions } = options; // Extract prefix and other options
-  const [files] = await bucket.getFiles({
-    ...restOptions,
-    prefix, // Use prefix option in getFiles
-  });
-
-  if (!files || files.length === 0) {
-    return [];
-  }
-
-  files.sort((a, b) =>
-    b.metadata.timeCreated.localeCompare(a.metadata.timeCreated)
-  );
-
-  return files.map((file) => {
-    const uploadDate = new Date(file.metadata.timeCreated);
-    const formattedDate = formatDate(uploadDate);
-    return {
-      filename: file.name,
-      uploadedAt: formattedDate,
-      url: `https://firebasestorage.googleapis.com/v0/b/${file.metadata.bucket}/o/${file.name}?alt=media`,
-      downloadUrl: `https://firebasestorage.googleapis.com/v0/b/${file.metadata.bucket}/o/${file.name}?alt=media`,
-    };
   });
 }
 

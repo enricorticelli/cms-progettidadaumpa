@@ -1,5 +1,3 @@
-// routes.js
-
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
@@ -49,7 +47,6 @@ router.post("/search", requiresAuth(), async (req, res) => {
       filesData = await getFilesData(res.locals.bucket, options);
       res.locals.myCache.set("filesData" + prefix, filesData);
     }
-    console.log(filesData);
     res.render("partials/table_immagini", { files: filesData }); // Send updated table partial
   } catch (error) {
     console.error("Error downloading all files:", error);

@@ -24,21 +24,9 @@ function deleteArtista() {
   fetch("/artisti/" + codiceArtista, {
     method: "DELETE",
   })
-    .then((response) => {
-      if (response.ok) {
-        showSuccessMessage(
-          "Operazione di eliminazione completata con successo!"
-        );
-      } else {
-        showErrorMessage(
-          "Errore durante l'eliminazione dell'artista: " + error
-        );
-      }
-    })
-    .catch((error) => {
-      showErrorMessage("Errore durante l'eliminazione dell'artista: " + error);
-      console.error("Errore durante l'eliminazione dell'artista:", error);
-    });
+    .then((response) => response.text())
+    .then((data) => aggiornaTabella(data, "tabella_artisti", true))
+    .catch((error) => console.error("Error:", error));
 
   chiudiModal("artisti");
 }

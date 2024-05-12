@@ -1,5 +1,3 @@
-// artisti.js
-
 const express = require("express");
 const router = express.Router();
 const { requiresAuth } = require("express-openid-connect");
@@ -18,6 +16,7 @@ const {
   spostaInFondo,
 } = require("../services/artisti_service");
 
+//INDEX
 router.get("/", requiresAuth(), async function (req, res, next) {
   try {
     var artisti = res.locals.myCache.get("artisti");
@@ -38,6 +37,7 @@ router.get("/", requiresAuth(), async function (req, res, next) {
   }
 });
 
+//GET NEW
 router.get("/nuovo", requiresAuth(), async function (req, res, next) {
   const emptyArtist = await getEmptyArtist();
 
@@ -57,6 +57,7 @@ router.get("/nuovo", requiresAuth(), async function (req, res, next) {
   });
 });
 
+//GET
 router.get("/:codice", requiresAuth(), async function (req, res, next) {
   const codice = req.params.codice;
 
@@ -92,6 +93,24 @@ router.get("/:codice", requiresAuth(), async function (req, res, next) {
   }
 });
 
+//UPDATE
+router.post("/:codice", requiresAuth(), async function (req, res, next) {
+  const codice = req.params.codice;
+  const body = req.body;
+
+  try {
+    await updateArtist(codice, body);
+    eliminaCacheArtisti(res.locals.myCache);
+    console.log("Artisti removed from CACHE");
+
+    res.redirect("/artisti");
+  } catch (err) {
+    console.error("Errore durante l'aggiornamento dell'artista:", err);
+    res.status(500).send("Errore durante l'aggiornamento dell'artista");
+  }
+});
+
+//DELETE
 router.delete("/:codice", requiresAuth(), async function (req, res, next) {
   const codice = req.params.codice;
 
@@ -100,13 +119,14 @@ router.delete("/:codice", requiresAuth(), async function (req, res, next) {
     res.locals.myCache.set("artisti", artisti);
 
     console.log("Artista eliminato con successo");
-    res.sendStatus(204); // Risposta di successo senza contenuto
+    res.render("partials/table_artisti", { artisti });
   } catch (err) {
     console.error("Errore durante l'eliminazione dell'artista:", err);
     res.status(500).send("Errore durante l'eliminazione dell'artista");
   }
 });
 
+//TOGGLE
 router.post("/toggle/:codice", requiresAuth(), async function (req, res, next) {
   const codice = req.params.codice;
   const attivo = req.body.attivo;
@@ -128,6 +148,7 @@ router.post("/toggle/:codice", requiresAuth(), async function (req, res, next) {
   }
 });
 
+//SPOSTAMENTI
 router.post("/:codice/up", requiresAuth(), async function (req, res, next) {
   const codice = req.params.codice;
 
@@ -207,22 +228,6 @@ router.post("/:codice/bottom", requiresAuth(), async function (req, res, next) {
     res
       .status(500)
       .send("Errore durante l'aggiornamento dello stato 'attivo' dell'artista");
-  }
-});
-
-router.post("/:codice", requiresAuth(), async function (req, res, next) {
-  const codice = req.params.codice;
-  const body = req.body;
-
-  try {
-    await updateArtist(codice, body);
-    eliminaCacheArtisti(res.locals.myCache);
-    console.log("Artisti removed from CACHE");
-
-    res.redirect("/artisti");
-  } catch (err) {
-    console.error("Errore durante l'aggiornamento dell'artista:", err);
-    res.status(500).send("Errore durante l'aggiornamento dell'artista");
   }
 });
 

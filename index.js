@@ -8,6 +8,7 @@ const { auth } = require("express-openid-connect");
 const router = require("./routes/index_router");
 const artistiRouter = require("./routes/artisti_router");
 const immaginiRouter = require("./routes/immagini_router");
+const newsRouter = require("./routes/news_router");
 
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
@@ -24,7 +25,7 @@ const myCache = new NodeCache({
   onExpire: function (key, value) {
     console.log(`Key ${key} expired`);
   },
-  maxKeys: 1000 // Massimo 1000 chiavi nella cache
+  maxKeys: 1000, // Massimo 1000 chiavi nella cache
 });
 
 const authConfig = {
@@ -36,20 +37,20 @@ const authConfig = {
   issuerBaseURL: process.env.ISSUER_BASE_URL,
 };
 
-const privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, '\n');
+const privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
 
 const serviceAccount = {
-  "type": "service_account",
-  "project_id": process.env.PROJECT_ID,
-  "private_key_id": process.env.PRIVATE_KEY_ID,
-  "private_key": privateKey, // Use the processed private key
-  "client_email": process.env.CLIENT_FB_EMAIL,
-  "client_id": process.env.CLIENT_FB_ID,
-  "auth_uri": process.env.AUTH_URI,
-  "token_uri": process.env.TOKEN_URI,
-  "auth_provider_x509_cert_url": process.env.AUTH_PROVIDER_X509_CERT_URL,
-  "client_x509_cert_url": process.env.CLIENT_X509_CERT_URL,
-  "universe_domain": process.env.UNIVERSE_DOMAIN
+  type: "service_account",
+  project_id: process.env.PROJECT_ID,
+  private_key_id: process.env.PRIVATE_KEY_ID,
+  private_key: privateKey, // Use the processed private key
+  client_email: process.env.CLIENT_FB_EMAIL,
+  client_id: process.env.CLIENT_FB_ID,
+  auth_uri: process.env.AUTH_URI,
+  token_uri: process.env.TOKEN_URI,
+  auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_X509_CERT_URL,
+  client_x509_cert_url: process.env.CLIENT_X509_CERT_URL,
+  universe_domain: process.env.UNIVERSE_DOMAIN,
 };
 
 var admin = require("firebase-admin");
@@ -88,6 +89,7 @@ app.use(logger("dev"));
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/artisti", express.static(path.join(__dirname, "public")));
 app.use("/immagini", express.static(path.join(__dirname, "public")));
+app.use("/news", express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -107,6 +109,7 @@ app.use(function (req, res, next) {
 app.use("/", router);
 app.use("/artisti", artistiRouter);
 app.use("/immagini", immaginiRouter);
+app.use("/news", newsRouter);
 
 // Swagger endpoint
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
