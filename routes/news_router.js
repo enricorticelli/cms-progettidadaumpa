@@ -145,22 +145,25 @@ router.post("/:id", requiresAuth(), async function (req, res, next) {
   }
 });
 
-router.post("/:id/elimina", requiresAuth(), async function (req, res, next) {
+router.delete("/:id", requiresAuth(), async function (req, res, next) {
   const articleId = req.params.id;
   try {
     await deleteArticle(articleId);
 
-    var artists = res.locals.myCache.get("articles");
-    if (artists !== undefined) {
+    var articles = res.locals.myCache.get("articles");
+    if (articles !== undefined) {
       const index = articles.findIndex((a) => a.id === parseInt(articleId));
       if (index !== -1) {
         console.log("Artist removed from CACHE");
-        artists.splice(index, 1);
-        res.locals.myCache.set("articles", artists);
+        articles.splice(index, 1);
       }
+    } else {
+      console.log("Articles CACHED");
+      articles = await getAllArticles();
     }
+    res.locals.myCache.set("articles", articles);
 
-    res.redirect("/news");
+    res.render("partials/table_news", { articles });
   } catch (err) {
     console.error(err);
     res.status(500).send("Errore durante l'eliminazione dell'articolo");
