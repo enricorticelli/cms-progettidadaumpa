@@ -260,7 +260,7 @@ function aggiornaTabella(response, nomeTabella, notify) {
 
 // Toggle function
 function toggleAttivo(codice, attivo) {
-  fetch(`/artisti/toggle/${codice}`, {
+  fetch(`/artisti/${codice}/toggle`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ attivo }),

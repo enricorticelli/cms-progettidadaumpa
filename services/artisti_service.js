@@ -31,21 +31,101 @@ async function getArtistByCode(codice) {
   }
 }
 
-async function getEmptyArtist() {
-  const emptyArtist = {
-    id: null,
-    codice: "nuovo",
-    nome: "",
-    sito: "",
-    descrizione: "",
-    sezione_2: "",
-    spettacoli: "",
-    img1: "",
-    img2: "",
-    img3: "",
-    img4: "",
-  };
-  return emptyArtist;
+async function createArtist(body) {
+  const {
+    nome,
+    sito,
+    descrizione,
+    sezione_2,
+    spettacoli,
+    img1,
+    img2,
+    img3,
+    img4,
+  } = body;
+
+  const client = await pool.connect();
+
+  try {
+    const cleanedCodice = nome
+      ? nome.trim().replace(/\s+/g, "").toLowerCase()
+      : null;
+
+    const maxRes = await client.query(
+      `SELECT MAX(ordine) as maxOrdine FROM artisti`
+    );
+    const maxOrder = maxRes.rows[0].maxordine + 1;
+
+    const insertResult = await client.query(
+      `
+        INSERT INTO artisti (codice, nome, sito, descrizione, sezione_2, spettacoli, img1, img2, img3, img4, ordine, data_aggiunta, data_modifica)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+        RETURNING *;
+      `,
+      [
+        cleanedCodice,
+        nome ? nome.trim() : null,
+        sito ? sito.trim() : null,
+        descrizione ? descrizione.trim() : null,
+        sezione_2 ? sezione_2.trim() : null,
+        spettacoli ? spettacoli.trim() : null,
+        img1,
+        img2,
+        img3,
+        img4,
+        maxOrder,
+      ]
+    );
+
+    console.log("Artista creato con successo " + insertResult.rows[0]);
+    return insertResult.rows[0];
+  } finally {
+    client.release();
+  }
+}
+
+async function updateArtist(codice, body) {
+  const {
+    nome,
+    sito,
+    descrizione,
+    sezione_2,
+    spettacoli,
+    img1,
+    img2,
+    img3,
+    img4,
+  } = body;
+
+  const client = await pool.connect();
+
+  try {
+    const updateResult = await client.query(
+      `
+        UPDATE artisti
+        SET nome = $1, sito = $2, descrizione = $3, sezione_2 = $4, spettacoli = $5, img1 = $6, img2 = $7, img3 = $8, img4 = $9, data_modifica = NOW() 
+        WHERE codice = $10
+        RETURNING *;
+      `,
+      [
+        nome ? nome.trim() : null,
+        sito ? sito.trim() : null,
+        descrizione ? descrizione.trim() : null,
+        sezione_2 ? sezione_2.trim() : null,
+        spettacoli ? spettacoli.trim() : null,
+        img1,
+        img2,
+        img3,
+        img4,
+        codice,
+      ]
+    );
+
+    console.log("Artista aggiornato con successo " + updateResult.rows[0]);
+    return updateResult.rows[0];
+  } finally {
+    client.release();
+  }
 }
 
 async function deleteArtist(codice) {
@@ -60,7 +140,6 @@ async function deleteArtist(codice) {
     );
 
     console.log("Deleted: " + deleteResult);
-    return await getAllArtists();
   } catch (err) {
     console.error("Error deleting artist:", err);
   } finally {
@@ -76,14 +155,15 @@ async function toggleArtist(codice, attivo) {
       `
       UPDATE artisti 
       SET attivo = $1 
-      WHERE codice = $2;
+      WHERE codice = $2
+      RETURNING *;
     `,
       [attivo, codice]
     );
 
     console.log("Toggled: " + updateResult);
 
-    return await getAllArtists();
+    return updateResult.rows[0];
   } catch (err) {
     console.error("Error toggling artist:", err);
   } finally {
@@ -107,7 +187,8 @@ async function spostaInCima(codice) {
       `
       UPDATE artisti
       SET ordine = ordine + 1
-      WHERE ordine < $1;
+      WHERE ordine < $1
+      RETURNING *;
       `,
       [currentOrder]
     );
@@ -117,14 +198,13 @@ async function spostaInCima(codice) {
       `
       UPDATE artisti
       SET ordine = 1
-      WHERE codice = $1;
+      WHERE codice = $1
+      RETURNING *;
       `,
       [codice]
     );
 
     console.log("Artista spostato in cima: " + codice);
-
-    return await getAllArtists();
   } catch (err) {
     console.error("Error moving artist to top:", err);
   } finally {
@@ -163,14 +243,13 @@ async function spostaInFondo(codice) {
       `
       UPDATE artisti
       SET ordine = $1
-      WHERE codice = $2;
+      WHERE codice = $2
+      RETURNING *;
       `,
       [maxOrder, codice]
     );
 
     console.log("Artista spostato in fondo: " + codice);
-
-    return await getAllArtists();
   } catch (err) {
     console.error("Error moving artist to bottom:", err);
   } finally {
@@ -207,7 +286,8 @@ async function spostaSu(codice) {
         `
         UPDATE artisti
         SET ordine = ordine - 1
-        WHERE codice = $1;
+        WHERE codice = $1
+        RETURNING *;
         `,
         [codice]
       );
@@ -216,7 +296,6 @@ async function spostaSu(codice) {
     }
 
     await client.query("COMMIT");
-    return await getAllArtists();
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Error moving artist up:", err);
@@ -259,7 +338,8 @@ async function spostaGiu(codice) {
         `
         UPDATE artisti
         SET ordine = ordine + 1
-        WHERE codice = $1;
+        WHERE codice = $1
+        RETURNING *;
         `,
         [codice]
       );
@@ -268,7 +348,6 @@ async function spostaGiu(codice) {
     }
 
     await client.query("COMMIT");
-    return await getAllArtists();
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Error moving artist down:", err);
@@ -277,93 +356,12 @@ async function spostaGiu(codice) {
   }
 }
 
-async function updateArtist(codice, body) {
-  const {
-    nome,
-    sito,
-    descrizione,
-    sezione_2,
-    spettacoli,
-    img1,
-    img2,
-    img3,
-    img4,
-  } = body;
-
-  const client = await pool.connect();
-
-  const checkArtist = await client.query(
-    `
-      SELECT * FROM artisti WHERE codice = $1;
-    `,
-    [codice]
-  );
-
-  if (checkArtist.rows.length === 0) {
-    const cleanedCodice = nome
-      ? nome.trim().replace(/\s+/g, "").toLowerCase()
-      : null;
-
-    const maxRes = await client.query(
-      `SELECT MAX(ordine) as maxOrdine FROM artisti`
-    );
-    const maxOrder = maxRes.rows[0].maxordine + 1;
-
-    const insertResult = await client.query(
-      `
-        INSERT INTO artisti (codice, nome, sito, descrizione, sezione_2, spettacoli, img1, img2, img3, img4, ordine, data_aggiunta, data_modifica)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW());
-      `,
-      [
-        cleanedCodice,
-        nome ? nome.trim() : null,
-        sito ? sito.trim() : null,
-        descrizione ? descrizione.trim() : null,
-        sezione_2 ? sezione_2.trim() : null,
-        spettacoli ? spettacoli.trim() : null,
-        img1,
-        img2,
-        img3,
-        img4,
-        maxOrder,
-      ]
-    );
-
-    console.log("Artista creato con successo " + insertResult);
-  } else {
-    // Update existing artist
-    const updateResult = await client.query(
-      `
-        UPDATE artisti
-        SET nome = $1, sito = $2, descrizione = $3, sezione_2 = $4, spettacoli = $5, img1 = $6, img2 = $7, img3 = $8, img4 = $9, data_modifica = NOW() 
-        WHERE codice = $10
-      `,
-      [
-        nome ? nome.trim() : null,
-        sito ? sito.trim() : null,
-        descrizione ? descrizione.trim() : null,
-        sezione_2 ? sezione_2.trim() : null,
-        spettacoli ? spettacoli.trim() : null,
-        img1,
-        img2,
-        img3,
-        img4,
-        codice,
-      ]
-    );
-
-    console.log("Artista aggiornato con successo " + updateResult);
-  }
-
-  client.release();
-}
-
 module.exports = {
   getAllArtists,
   getArtistByCode,
-  getEmptyArtist,
   deleteArtist,
   toggleArtist,
+  createArtist,
   updateArtist,
   spostaInCima,
   spostaInFondo,
