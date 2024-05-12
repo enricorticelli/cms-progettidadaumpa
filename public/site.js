@@ -8,6 +8,11 @@ function salvaUrlImmagineDaEliminare(value) {
   apriModal("immagini");
 }
 
+function salvaArticoloDaEliminare(value) {
+  document.getElementById("articolo").value = value;
+  apriModal("news");
+}
+
 function salvaIdImmagine(value) {
   document.getElementById("idImmagine").value = value;
 }
@@ -29,6 +34,41 @@ function deleteArtista() {
     .catch((error) => console.error("Error:", error));
 
   chiudiModal("artisti");
+}
+
+// Delete Image
+function deleteImmagine() {
+  const name = document.getElementById("filename").value;
+
+  const data = {
+    filename: name,
+  };
+
+  fetch("./delete", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+    .then((response) => response.text())
+    .then((data) => aggiornaTabella(data, "tabella_immagini", true))
+    .catch((error) => console.error("Error:", error));
+
+  chiudiModal("immagini");
+}
+
+function deleteArticolo() {
+  var idArticolo = document.getElementById("articolo").value;
+
+  fetch("/news/" + idArticolo, {
+    method: "DELETE",
+  })
+    .then((response) => response.text())
+    .then((data) => aggiornaTabella(data, "tabella_articoli", true))
+    .catch((error) => console.error("Error:", error));
+
+  chiudiModal("news");
 }
 
 function filterArtists() {
@@ -165,28 +205,6 @@ function resetDropzone(dropzoneFileInput, previewImage, uploadButton) {
   initializeDropzone(dropzoneFileInput, previewImage, uploadButton);
 }
 
-// Delete Image
-function deleteImmagine() {
-  const name = document.getElementById("filename").value;
-
-  const data = {
-    filename: name,
-  };
-
-  fetch("./delete", {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-    .then((response) => response.text())
-    .then((data) => aggiornaTabella(data, "tabella_immagini", true))
-    .catch((error) => console.error("Error:", error));
-
-  chiudiModal("immagini");
-}
-
 function showSuccessMessage(messageText) {
   Toastify({
     text: messageText,
@@ -254,7 +272,7 @@ function aggiornaTabella(response, nomeTabella, notify) {
   const tabella = document.getElementById(nomeTabella);
   tabella.innerHTML = response;
   if (notify) {
-    showSuccessMessage("Tabella degli artisti aggiornata con successo!");
+    showSuccessMessage("Tabella aggiornata con successo!");
   }
 }
 

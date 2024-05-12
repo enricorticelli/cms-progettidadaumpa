@@ -12,9 +12,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.get("/", requiresAuth(), async (req, res) => {
   try {
-    const { maxResults = 10, prefix = "" } = req.body; // Added prefix to the request body
+    const { prefix = "" } = req.body; // Added prefix to the request body
     const options = {
-      maxResults,
       prefix, // Include prefix in the options
     };
     var filesData = res.locals.myCache.get("filesData");
@@ -25,7 +24,10 @@ router.get("/", requiresAuth(), async (req, res) => {
       filesData = await getFilesData(res.locals.bucket, options);
       res.locals.myCache.set("filesData", filesData);
     }
-    res.render("immagini", { files: filesData });
+
+    const firstTenFiles = filesData.slice(0, 10);
+
+    res.render("immagini", { files: firstTenFiles });
   } catch (error) {
     console.error("Error downloading all files:", error);
     res.status(500).send("Internal Server Error");
@@ -34,9 +36,8 @@ router.get("/", requiresAuth(), async (req, res) => {
 
 router.post("/search", requiresAuth(), async (req, res) => {
   try {
-    const { maxResults = 10, prefix = "" } = req.body; // Added prefix to the request body
+    const { prefix = "" } = req.body; // Added prefix to the request body
     const options = {
-      maxResults,
       prefix, // Include prefix in the options
     };
     var filesData = res.locals.myCache.get("filesData" + prefix);
@@ -47,7 +48,10 @@ router.post("/search", requiresAuth(), async (req, res) => {
       filesData = await getFilesData(res.locals.bucket, options);
       res.locals.myCache.set("filesData" + prefix, filesData);
     }
-    res.render("partials/table_immagini", { files: filesData }); // Send updated table partial
+    console.log(filesData);
+    const firstTenFiles = filesData.slice(0, 10);
+
+    res.render("partials/table_immagini", { files: firstTenFiles }); // Send updated table partial
   } catch (error) {
     console.error("Error downloading all files:", error);
     res.status(500).send("Internal Server Error");
@@ -66,7 +70,9 @@ router.post(
       filesData = await getFilesData(res.locals.bucket);
       res.locals.myCache.set("filesData", filesData);
 
-      res.render("partials/table_immagini", { files: filesData }); // Send updated table partial
+      const firstTenFiles = filesData.slice(0, 10);
+
+      res.render("partials/table_immagini", { files: firstTenFiles }); // Send updated table partial
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Internal server error." });
@@ -87,7 +93,9 @@ router.delete("/delete", requiresAuth(), async (req, res) => {
     filesData = await getFilesData(res.locals.bucket);
     res.locals.myCache.set("filesData", filesData);
 
-    res.render("partials/table_immagini", { files: filesData }); // Send updated table partial
+    const firstTenFiles = filesData.slice(0, 10);
+
+    res.render("partials/table_immagini", { files: firstTenFiles }); // Send updated table partial
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error." });
