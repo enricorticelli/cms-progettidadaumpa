@@ -1,5 +1,3 @@
-// utils.js
-
 const { Pool } = require("pg");
 
 const pool = new Pool({
@@ -306,10 +304,15 @@ async function updateArtist(codice, body) {
       ? nome.trim().replace(/\s+/g, "").toLowerCase()
       : null;
 
+    const maxRes = await client.query(
+      `SELECT MAX(ordine) as maxOrdine FROM artisti`
+    );
+    const maxOrder = maxRes.rows[0].maxordine + 1;
+
     const insertResult = await client.query(
       `
-        INSERT INTO artisti (codice, nome, sito, descrizione, sezione_2, spettacoli, img1, img2, img3, img4, data_aggiunta, data_modifica)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW());
+        INSERT INTO artisti (codice, nome, sito, descrizione, sezione_2, spettacoli, img1, img2, img3, img4, ordine, data_aggiunta, data_modifica)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW());
       `,
       [
         cleanedCodice,
@@ -322,6 +325,7 @@ async function updateArtist(codice, body) {
         img2,
         img3,
         img4,
+        maxOrder,
       ]
     );
 
