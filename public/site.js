@@ -140,6 +140,12 @@ function initializeUploadButton(uploadButton, dropzoneFileInput, previewImage) {
     const file = dropzoneFileInput.files[0];
     if (!file) return;
 
+    if (!isImageFile(file)) {
+      showErrorMessage("Il file caricato non è un'immagine.");
+      resetDropzone(dropzoneFileInput, previewImage, uploadButton);
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -159,6 +165,16 @@ function initializeUploadButton(uploadButton, dropzoneFileInput, previewImage) {
       showErrorMessage("Errore durante il caricamento del file.");
     }
   });
+}
+
+function isImageFile(file) {
+  const acceptedImageTypes = [
+    "image/gif",
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+  ];
+  return acceptedImageTypes.includes(file.type);
 }
 
 if (document.getElementById("search-form")) {
@@ -255,6 +271,35 @@ async function downloadImage(url) {
     window.URL.revokeObjectURL(link.href);
   } catch (error) {
     console.error("Error downloading image:", error);
+  }
+}
+
+async function downloadZip() {
+  try {
+    const response = await fetch("./download-zip", {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(`Failed to download ZIP file: ${errorMessage}`);
+    }
+
+    // Creating a Blob object from the response data
+    const blob = await response.blob();
+
+    // Creating a temporary anchor element
+    const link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = "files.zip";
+
+    // Programmatically clicking the anchor to trigger download
+    link.click();
+
+    // Cleaning up the anchor element
+    window.URL.revokeObjectURL(link.href);
+  } catch (error) {
+    console.error("Error downloading ZIP file:", error);
   }
 }
 

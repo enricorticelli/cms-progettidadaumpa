@@ -6,6 +6,7 @@ const {
   downloadFile,
   uploadFile,
   getFilesData,
+  downloadFilesAsZip,
 } = require("../services/immagini_service");
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -83,6 +84,10 @@ router.post(
 router.post("/download", async (req, res) => {
   const { url } = req.body;
   await downloadFile(url, res);
+});
+
+router.get("/download-zip", async (req, res) => {
+  await downloadFilesAsZip(res);
 });
 
 router.delete("/delete", requiresAuth(), async (req, res) => {

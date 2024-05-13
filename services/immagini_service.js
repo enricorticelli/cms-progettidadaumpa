@@ -1,6 +1,9 @@
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
+const sharp = require("sharp");
 const { formatDate } = require("../services/utils");
+const archiver = require("archiver");
+const fs = require("fs");
 
 async function getFilesData(bucket, options = {}) {
   const { prefix, ...restOptions } = options; // Extract prefix and other options
@@ -49,6 +52,7 @@ function setResponseHeadersForDownload(res) {
 }
 
 async function uploadFile(bucket, fileName, buffer) {
+  const webPBuffer = await convertToWebP(buffer);
   const file = bucket.file(fileName);
   const uploadStream = file.createWriteStream({
     metadata: {
@@ -68,12 +72,64 @@ async function uploadFile(bucket, fileName, buffer) {
       console.log("File uploaded successfully.");
       resolve();
     });
-    uploadStream.end(buffer);
+    uploadStream.end(webPBuffer);
   });
+}
+
+async function convertToWebP(buffer) {
+  return sharp(buffer).webp().toBuffer();
+}
+
+async function downloadFilesAsZip(res) {
+  const zipFileName = "files.zip";
+  const zipFilePath = `${__dirname}/${zipFileName}`;
+
+  // Create a write stream to the zip file
+  const output = fs.createWriteStream(zipFilePath);
+  const archive = archiver("zip", {
+    zlib: { level: 9 }, // Set compression level
+  });
+
+  // Pipe the archive data to the output stream
+  archive.pipe(output);
+
+  var bucket = res.locals.bucket;
+
+  // Add files to the archive
+  const filesData = await getFilesData(bucket);
+
+  for (const fileData of filesData) {
+    const file = bucket.file(fileData.filename);
+    const downloadStream = file.createReadStream();
+
+    // Add the file to the archive with a dynamic name
+    archive.append(downloadStream, { name: fileData.filename });
+  }
+
+  // Finalize the archive (writes the ZIP file)
+  archive.finalize();
+
+  // Wait for the write stream to finish and then send the ZIP file as response
+  output.on("close", () => {
+    setResponseHeadersForDownload(res, zipFileName);
+    const zipReadStream = fs.createReadStream(zipFilePath);
+    zipReadStream.pipe(res);
+  });
+
+  output.on("error", (err) => {
+    console.error("Error creating ZIP file:", err);
+    res.status(500).send("Internal Server Error");
+  });
+}
+
+function setResponseHeadersForDownload(res, filename) {
+  res.setHeader("Content-disposition", `attachment; filename=${filename}`);
+  res.setHeader("Content-Type", "application/zip");
 }
 
 module.exports = {
   downloadFile,
   uploadFile,
   getFilesData,
+  downloadFilesAsZip,
 };
