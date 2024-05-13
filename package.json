@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "nodemon index.js",
+    "start-debug": "node index.js"
   },
   "keywords": [],
   "author": "",
@@ -28,6 +29,7 @@
     "path": "^0.12.7",
     "pg": "^8.11.5",
     "salted-md5": "^4.0.8",
+    "sharp": "^0.33.3",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "uuid": "^9.0.1"
