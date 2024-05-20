@@ -23,6 +23,14 @@ function selezionaImmagine(url) {
   document.getElementById("imgPreview" + idImmagine).src = url;
 }
 
+function showLoading() {
+  document.getElementById("load2").style.display = "flex";
+}
+
+function hideLoading() {
+  document.getElementById("load2").style.display = "none";
+}
+
 function deleteArtista() {
   var codiceArtista = document.getElementById("codiceArtista").value;
 
@@ -135,14 +143,24 @@ function initializeDropzone(dropzoneFileInput, previewImage, uploadButton) {
 // Initialize Upload Button
 function initializeUploadButton(uploadButton, dropzoneFileInput, previewImage) {
   uploadButton.addEventListener("click", async function () {
+    // Mostra la schermata di caricamento
+    showLoading();
+
+    // Nasconde il pulsante di caricamento
     uploadButton.classList.add("hidden");
 
     const file = dropzoneFileInput.files[0];
-    if (!file) return;
+    if (!file) {
+      // Nasconde la schermata di caricamento se non viene selezionato nessun file
+      hideLoading();
+      return;
+    }
 
     if (!isImageFile(file)) {
       showErrorMessage("Il file caricato non è un'immagine.");
       resetDropzone(dropzoneFileInput, previewImage, uploadButton);
+      // Nasconde la schermata di caricamento in caso di errore
+      hideLoading();
       return;
     }
 
@@ -158,11 +176,19 @@ function initializeUploadButton(uploadButton, dropzoneFileInput, previewImage) {
         .then((data) => {
           aggiornaTabella(data, "tabella_immagini", true);
           resetDropzone(dropzoneFileInput, previewImage, uploadButton);
+          // Nasconde la schermata di caricamento dopo il completamento del caricamento
+          hideLoading();
         })
-        .catch((error) => console.error("Error:", error));
+        .catch((error) => {
+          console.error("Error:", error);
+          // Nasconde la schermata di caricamento in caso di errore
+          hideLoading();
+        });
     } catch (error) {
       console.error("Error during upload:", error);
       showErrorMessage("Errore durante il caricamento del file.");
+      // Nasconde la schermata di caricamento in caso di errore
+      hideLoading();
     }
   });
 }
@@ -330,6 +356,17 @@ function toggleAttivo(codice, attivo) {
   })
     .then((response) => response.text())
     .then((data) => aggiornaTabella(data, "tabella_artisti", true))
+    .catch((error) => console.error("Error:", error));
+}
+
+function pubblicaArticolo(id, attivo) {
+  fetch(`/news/${id}/toggle`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ attivo }),
+  })
+    .then((response) => response.text())
+    .then((data) => aggiornaTabella(data, "tabella_articoli", true))
     .catch((error) => console.error("Error:", error));
 }
 

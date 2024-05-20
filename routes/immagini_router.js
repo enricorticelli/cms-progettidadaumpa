@@ -68,7 +68,7 @@ router.post(
     try {
       await uploadFile(res.locals.bucket, fileName, req.file.buffer);
 
-      filesData = await getFilesData(res.locals.bucket);
+      const filesData = await getFilesData(res.locals.bucket);
       res.locals.myCache.set("filesData", filesData);
 
       const firstTenFiles = filesData.slice(0, 10);
@@ -95,7 +95,7 @@ router.delete("/delete", requiresAuth(), async (req, res) => {
   try {
     await res.locals.bucket.file(fileName).delete();
 
-    filesData = await getFilesData(res.locals.bucket);
+    const filesData = await getFilesData(res.locals.bucket);
     res.locals.myCache.set("filesData", filesData);
 
     const firstTenFiles = filesData.slice(0, 10);
