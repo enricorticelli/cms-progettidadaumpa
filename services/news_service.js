@@ -30,7 +30,15 @@ async function getArticleById(articleId) {
     const result = await client.query(`SELECT * FROM articoli WHERE id = $1;`, [
       articleId,
     ]);
-    return result.rows[0];
+
+    const article = result.rows[0];
+    article.data_pubblicazione = formatDate(
+      new Date(article.data_pubblicazione)
+    );
+
+    console.log("Get: ", article);
+
+    return article;
   } catch (err) {
     console.error("Error getting article with ID " + articleId + ":", err);
   } finally {
@@ -51,7 +59,15 @@ async function createArticle(
       `INSERT INTO articoli (titolo, sottotitolo, contenuto, autore, immagine_url) VALUES ($1, $2, $3, $4, $5) RETURNING *;`,
       [titolo, sottotitolo, contenuto, autore, immagine_url]
     );
-    return result.rows[0];
+
+    const article = result.rows[0];
+    article.data_pubblicazione = formatDate(
+      new Date(article.data_pubblicazione)
+    );
+
+    console.log("Created: ", article);
+
+    return article;
   } catch (err) {
     console.error("Error creating article:", err);
   } finally {
@@ -73,7 +89,15 @@ async function updateArticle(
       `UPDATE articoli SET titolo = $1, sottotitolo = $2, contenuto = $3, autore = $4, immagine_url = $5 WHERE id = $6 RETURNING *;`,
       [titolo, sottotitolo, contenuto, autore, immagine_url, id]
     );
-    return result.rows[0];
+
+    const article = result.rows[0];
+    article.data_pubblicazione = formatDate(
+      new Date(article.data_pubblicazione)
+    );
+
+    console.log("Updated: ", article);
+
+    return article;
   } catch (err) {
     console.error("Error updating article with ID " + id + ":", err);
   } finally {
@@ -92,10 +116,42 @@ async function deleteArticle(articleId) {
   }
 }
 
+async function toggleArticle(id, attivo) {
+  const client = await pool.connect();
+
+  try {
+    const result = await client.query(
+      `
+      UPDATE articoli 
+      SET attivo = $1 
+      WHERE id = $2
+      RETURNING *;
+    `,
+      [attivo, id]
+    );
+
+    console.log("Toggled: " + result);
+
+    const article = result.rows[0];
+    article.data_pubblicazione = formatDate(
+      new Date(article.data_pubblicazione)
+    );
+
+    console.log("Toggled: ", article);
+
+    return article;
+  } catch (err) {
+    console.error("Error toggling article:", err);
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   getAllArticles,
   getArticleById,
   createArticle,
   updateArticle,
   deleteArticle,
+  toggleArticle,
 };

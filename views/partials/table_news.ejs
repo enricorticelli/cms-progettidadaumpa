@@ -10,7 +10,8 @@
     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
       <tr>
         <th scope="col" class="px-4 py-3 w-1/3 text-left">Titolo</th>
-        <th scope="col" class="px-4 py-3 w-1/3 text-left">Data pubblicazione</th>
+        <th scope="col" class="px-4 py-3 w-1/3 text-left">Data inserimento</th>
+        <th scope="col" class="px-4 py-3 w-1/3 text-left">Pubblicato</th>
         <th scope="col" class="px-4 py-3 w-1/3 text-center">Anteprima</th>
         <th scope="col" class="px-4 py-3 w-1/12 text-left">
           <span class="sr-only">Azioni</span>
@@ -32,6 +33,13 @@
         </td>
         <td class="px-4 py-3 w-1/3 text-left font-medium text-gray-900 dark:text-white">
           <%= article.data_pubblicazione %>
+        </td>
+        <td class="px-4 py-3">
+          <label title="Attiva/Disattiva" class="inline-flex items-center mb-5 cursor-pointer">
+            <input type="checkbox" <%= article.attivo ? 'checked' : '' %> onclick="pubblicaArticolo('<%= article.id %>', this.checked)" value="" class="sr-only peer">
+            <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:w-5 after:h-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"></span>
+          </label>
         </td>
         <td class="px-4 py-3 w-1/3 text-center">
           <img src="<%= article.immagine_url %>" alt="<%= article.titolo %>" class="h-auto max-h-24 mx-auto">

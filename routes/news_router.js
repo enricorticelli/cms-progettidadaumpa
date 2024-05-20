@@ -9,6 +9,7 @@ const {
   createArticle,
   updateArticle,
   deleteArticle,
+  toggleArticle,
 } = require("../services/news_service");
 
 router.get("/", requiresAuth(), async function (req, res, next) {
@@ -127,7 +128,7 @@ router.post("/:id", requiresAuth(), async function (req, res, next) {
 
     var articles = res.locals.myCache.get("articles");
     if (articles !== undefined) {
-      const index = articles.findIndex((a) => a.id === article.id);
+      const index = articles.findIndex((a) => a.id === parseInt(articleId));
       if (index !== -1) {
         console.log("Article updated in CACHE");
         articles[index] = article;
@@ -167,6 +168,42 @@ router.delete("/:id", requiresAuth(), async function (req, res, next) {
   } catch (err) {
     console.error(err);
     res.status(500).send("Errore durante l'eliminazione dell'articolo");
+  }
+});
+
+router.post("/:id/toggle", requiresAuth(), async function (req, res, next) {
+  const id = req.params.id;
+  const attivo = req.body.attivo;
+
+  try {
+    const updatedArticle = await toggleArticle(id, attivo);
+
+    var articles = res.locals.myCache.get("articles");
+    if (articles === undefined) {
+      articles = await getAllArticles();
+    } else {
+      const index = articles.findIndex(
+        (article) => article.id === parseInt(id)
+      );
+      if (index !== -1) {
+        console.log("Artist updated in CACHE");
+        articles[index] = updatedArticle;
+      }
+    }
+    res.locals.myCache.set("articles", articles);
+
+    console.log("Stato pubblicazione aggiornata con successo");
+    res.render("partials/table_news", { articles }); // Send updated table partial
+  } catch (err) {
+    console.error(
+      "Errore durante l'aggiornamento dello stato 'attivo' dell'articolo:",
+      err
+    );
+    res
+      .status(500)
+      .send(
+        "Errore durante l'aggiornamento dello stato 'attivo' dell'articolo"
+      );
   }
 });
 
