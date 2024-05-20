@@ -74,7 +74,7 @@ function deleteArticolo() {
 function filterArtists() {
   // Prendi il valore dalla barra di ricerca
   var input, filter, table, tr, td, i, txtValue;
-  input = document.getElementById("simple-search");
+  input = document.getElementById("simple-search-img");
   filter = input.value.toUpperCase();
   table = document.querySelector("table");
   tr = table.getElementsByTagName("tr");
@@ -82,7 +82,7 @@ function filterArtists() {
   // Per ogni riga della tabella, controlla se il nome artista corrisponde alla ricerca
   for (i = 1; i < tr.length; i++) {
     // Start from 1 to skip the header row
-    td = tr[i].getElementsByTagName("td")[1]; // The second cell contains the artist's name
+    td = tr[i].getElementsByTagName("td")[0]; // The second cell contains the artist's name
     if (td) {
       txtValue = td.textContent || td.innerText;
       if (txtValue.toUpperCase().indexOf(filter) > -1) {
@@ -98,9 +98,9 @@ function filterArtists() {
 
 document.addEventListener("DOMContentLoaded", function () {
   // Verifica se siamo sulla pagina corretta prima di associare l'evento
-  if (document.getElementById("simple-search")) {
+  if (document.getElementById("simple-search-img")) {
     document
-      .getElementById("simple-search")
+      .getElementById("simple-search-img")
       .addEventListener("keyup", filterArtists);
   }
 
