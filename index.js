@@ -9,6 +9,7 @@ const router = require("./routes/index_router");
 const artistiRouter = require("./routes/artisti_router");
 const immaginiRouter = require("./routes/immagini_router");
 const newsRouter = require("./routes/news_router");
+const bannerRouter = require("./routes/banner_router");
 
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
@@ -110,6 +111,7 @@ app.use("/", router);
 app.use("/artisti", artistiRouter);
 app.use("/immagini", immaginiRouter);
 app.use("/news", newsRouter);
+app.use("/banner", bannerRouter);
 
 // Swagger endpoint
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
