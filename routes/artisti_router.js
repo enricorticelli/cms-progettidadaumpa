@@ -86,7 +86,7 @@ router.post("/nuovo", requiresAuth(), async function (req, res, next) {
     res.redirect(`/artisti`);
   } catch (err) {
     console.error(err);
-    res.status(500).send("Errore durante la creazione del nuovo artista");
+    //res.status(500).send("Errore durante la creazione del nuovo artista");
   }
 });
 

@@ -1,5 +1,6 @@
 const { Pool } = require("pg");
 const { formatDate } = require("../services/utils");
+const slugify = require("slugify"); // Assicurati di avere il pacchetto slugify installato
 
 const pool = new Pool({
   connectionString: process.env["POSTGRES_URL"],
@@ -24,12 +25,13 @@ async function getAllArticles() {
   }
 }
 
-async function getArticleById(articleId) {
+async function getArticleByCode(articleCode) {
   const client = await pool.connect();
   try {
-    const result = await client.query(`SELECT * FROM articoli WHERE id = $1;`, [
-      articleId,
-    ]);
+    const result = await client.query(
+      `SELECT * FROM articoli WHERE codice = $1;`,
+      [articleCode]
+    );
 
     const article = result.rows[0];
     article.data_pubblicazione = formatDate(
@@ -40,7 +42,7 @@ async function getArticleById(articleId) {
 
     return article;
   } catch (err) {
-    console.error("Error getting article with ID " + articleId + ":", err);
+    console.error("Error getting article with Code " + articleCode + ":", err);
   } finally {
     client.release();
   }
@@ -55,9 +57,29 @@ async function createArticle(
 ) {
   const client = await pool.connect();
   try {
+    const slug = slugify(titolo, { lower: true, strict: true });
+
+    // Controlla la unicità dello slug e aggiungi un suffisso se necessario
+    let uniqueSlug = slug;
+    let suffix = 1;
+    let exists = true;
+
+    while (exists) {
+      const checkSlugRes = await client.query(
+        `SELECT COUNT(*) FROM articoli WHERE codice = $1`,
+        [uniqueSlug]
+      );
+      exists = parseInt(checkSlugRes.rows[0].count) > 0;
+
+      if (exists) {
+        uniqueSlug = `${slug}-${suffix}`;
+        suffix++;
+      }
+    }
+
     const result = await client.query(
-      `INSERT INTO articoli (titolo, sottotitolo, contenuto, autore, immagine_url) VALUES ($1, $2, $3, $4, $5) RETURNING *;`,
-      [titolo, sottotitolo, contenuto, autore, immagine_url]
+      `INSERT INTO articoli (codice, titolo, sottotitolo, contenuto, autore, immagine_url) VALUES ($1, $2, $3, $4, $5) RETURNING *;`,
+      [uniqueSlug, titolo, sottotitolo, contenuto, autore, immagine_url]
     );
 
     const article = result.rows[0];
@@ -76,7 +98,7 @@ async function createArticle(
 }
 
 async function updateArticle(
-  id,
+  articleCode,
   titolo,
   sottotitolo,
   contenuto,
@@ -86,8 +108,8 @@ async function updateArticle(
   const client = await pool.connect();
   try {
     const result = await client.query(
-      `UPDATE articoli SET titolo = $1, sottotitolo = $2, contenuto = $3, autore = $4, immagine_url = $5 WHERE id = $6 RETURNING *;`,
-      [titolo, sottotitolo, contenuto, autore, immagine_url, id]
+      `UPDATE articoli SET titolo = $1, sottotitolo = $2, contenuto = $3, autore = $4, immagine_url = $5 WHERE codice = $6 RETURNING *;`,
+      [titolo, sottotitolo, contenuto, autore, immagine_url, articleCode]
     );
 
     const article = result.rows[0];
@@ -99,24 +121,24 @@ async function updateArticle(
 
     return article;
   } catch (err) {
-    console.error("Error updating article with ID " + id + ":", err);
+    console.error("Error updating article with Code " + articleCode + ":", err);
   } finally {
     client.release();
   }
 }
 
-async function deleteArticle(articleId) {
+async function deleteArticle(articleCode) {
   const client = await pool.connect();
   try {
-    await client.query(`DELETE FROM articoli WHERE id = $1;`, [articleId]);
+    await client.query(`DELETE FROM articoli WHERE code = $1;`, [articleCode]);
   } catch (err) {
-    console.error("Error deleting article with ID " + articleId + ":", err);
+    console.error("Error deleting article with Code " + articleCode + ":", err);
   } finally {
     client.release();
   }
 }
 
-async function toggleArticle(id, attivo) {
+async function toggleArticle(codice, attivo) {
   const client = await pool.connect();
 
   try {
@@ -124,10 +146,10 @@ async function toggleArticle(id, attivo) {
       `
       UPDATE articoli 
       SET attivo = $1 
-      WHERE id = $2
+      WHERE codice = $2
       RETURNING *;
     `,
-      [attivo, id]
+      [attivo, codice]
     );
 
     console.log("Toggled: " + result);
@@ -149,7 +171,7 @@ async function toggleArticle(id, attivo) {
 
 module.exports = {
   getAllArticles,
-  getArticleById,
+  getArticleById: getArticleByCode,
   createArticle,
   updateArticle,
   deleteArticle,

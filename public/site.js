@@ -67,9 +67,9 @@ function deleteImmagine() {
 }
 
 function deleteArticolo() {
-  var idArticolo = document.getElementById("articolo").value;
+  var codiceArticolo = document.getElementById("articolo").value;
 
-  fetch("/news/" + idArticolo, {
+  fetch("/news/" + codiceArticolo, {
     method: "DELETE",
   })
     .then((response) => response.text())
@@ -327,8 +327,8 @@ function toggleAttivo(codice, attivo) {
     .catch((error) => console.error("Error:", error));
 }
 
-function pubblicaArticolo(id, attivo) {
-  fetch(`/news/${id}/toggle`, {
+function pubblicaArticolo(codice, attivo) {
+  fetch(`/news/${codice}/toggle`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ attivo }),

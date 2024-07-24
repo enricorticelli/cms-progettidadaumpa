@@ -36,7 +36,7 @@
         </td>
         <td class="px-4 py-3">
           <label title="Attiva/Disattiva" class="inline-flex items-center mb-5 cursor-pointer">
-            <input type="checkbox" <%= article.attivo ? 'checked' : '' %> onclick="pubblicaArticolo('<%= article.id %>', this.checked)" value="" class="sr-only peer">
+            <input type="checkbox" <%= article.attivo ? 'checked' : '' %> onclick="pubblicaArticolo('<%= article.codice %>', this.checked)" value="" class="sr-only peer">
             <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:w-5 after:h-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
             <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"></span>
           </label>
@@ -45,12 +45,12 @@
           <img src="<%= article.immagine_url %>" alt="<%= article.titolo %>" class="h-auto max-h-24 mx-auto">
         </td>
         <td title="Modifica" class="px-4 py-3 flex items-center justify-end">
-          <button onclick="window.location.href='./<%= article.id %>';" id="apple-imac-27-dropdown-button" class="inline-flex items-center p-0.5 text-sm font-medium text-center rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100" type="button">
+          <button onclick="window.location.href='./<%= article.codice %>';" id="apple-imac-27-dropdown-button" class="inline-flex items-center p-0.5 text-sm font-medium text-center rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100" type="button">
             <svg class="w-6 h-6 text-gray-600 hover:text-gray-900 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
               <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M18 5V4a1 1 0 0 0-1-1H8.914a1 1 0 0 0-.707.293L4.293 7.207A1 1 0 0 0 4 7.914V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5M9 3v4a1 1 0 0 1-1 1H4m11.383.772 2.745 2.746m1.215-3.906a2.089 2.089 0 0 1 0 2.953l-6.65 6.646L9 17.95l.739-3.692 6.646-6.646a2.087 2.087 0 0 1 2.958 0Z" />
             </svg>
           </button>
-          <button title="Elimina" onclick="salvaArticoloDaEliminare('<%= article.id %>')" id="apple-imac-27-dropdown-button" class="inline-flex items-center p-0.5 text-sm font-medium text-center rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100" type="button">
+          <button title="Elimina" onclick="salvaArticoloDaEliminare('<%= article.codice %>')" id="apple-imac-27-dropdown-button" class="inline-flex items-center p-0.5 text-sm font-medium text-center rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100" type="button">
             <svg class="w-6 h-6 text-red-500 hover:text-red-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
               <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
             </svg>

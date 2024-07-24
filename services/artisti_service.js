@@ -1,4 +1,5 @@
 const { Pool } = require("pg");
+const slugify = require("slugify"); // Assicurati di avere il pacchetto slugify installato
 
 const pool = new Pool({
   connectionString: process.env["POSTGRES_URL"],
@@ -47,9 +48,26 @@ async function createArtist(body) {
   const client = await pool.connect();
 
   try {
-    const cleanedCodice = nome
-      ? nome.trim().replace(/\s+/g, "").toLowerCase()
-      : null;
+    // Genera lo slug dal nome dell'artista
+    const slug = slugify(nome, { lower: true, strict: true });
+
+    // Controlla la unicità dello slug e aggiungi un suffisso se necessario
+    let uniqueSlug = slug;
+    let suffix = 1;
+    let exists = true;
+
+    while (exists) {
+      const checkSlugRes = await client.query(
+        `SELECT COUNT(*) FROM artisti WHERE codice = $1`,
+        [uniqueSlug]
+      );
+      exists = parseInt(checkSlugRes.rows[0].count) > 0;
+
+      if (exists) {
+        uniqueSlug = `${slug}-${suffix}`;
+        suffix++;
+      }
+    }
 
     const maxRes = await client.query(
       `SELECT MAX(ordine) as maxOrdine FROM artisti`
@@ -63,7 +81,7 @@ async function createArtist(body) {
         RETURNING *;
       `,
       [
-        cleanedCodice,
+        uniqueSlug,
         nome ? nome.trim() : null,
         sito ? sito.trim() : null,
         descrizione ? descrizione.trim() : null,

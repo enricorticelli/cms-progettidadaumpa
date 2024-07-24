@@ -5,7 +5,7 @@ require("dotenv").config();
 const { getFilesData } = require("../services/immagini_service");
 const {
   getAllArticles,
-  getArticleById,
+  getArticleById: getArticleByCode,
   createArticle,
   updateArticle,
   deleteArticle,
@@ -88,10 +88,10 @@ router.post("/nuovo", requiresAuth(), async function (req, res, next) {
   }
 });
 
-router.get("/:id", requiresAuth(), async function (req, res, next) {
-  const articleId = req.params.id;
+router.get("/:code", requiresAuth(), async function (req, res, next) {
+  const articleCode = req.params.code;
   try {
-    const article = await getArticleById(articleId);
+    const article = await getArticleByCode(articleCode);
 
     var filesData = res.locals.myCache.get("filesData");
     if (filesData !== undefined) {
@@ -113,12 +113,12 @@ router.get("/:id", requiresAuth(), async function (req, res, next) {
   }
 });
 
-router.post("/:id", requiresAuth(), async function (req, res, next) {
-  const articleId = req.params.id;
+router.post("/:code", requiresAuth(), async function (req, res, next) {
+  const articleCode = req.params.code;
   const { titolo, sottotitolo, contenuto, autore, immagine_url } = req.body;
   try {
     const article = await updateArticle(
-      articleId,
+      articleCode,
       titolo,
       sottotitolo,
       contenuto,
@@ -128,7 +128,7 @@ router.post("/:id", requiresAuth(), async function (req, res, next) {
 
     var articles = res.locals.myCache.get("articles");
     if (articles !== undefined) {
-      const index = articles.findIndex((a) => a.id === parseInt(articleId));
+      const index = articles.findIndex((a) => a.codice === articleCode);
       if (index !== -1) {
         console.log("Article updated in CACHE");
         articles[index] = article;
@@ -146,14 +146,14 @@ router.post("/:id", requiresAuth(), async function (req, res, next) {
   }
 });
 
-router.delete("/:id", requiresAuth(), async function (req, res, next) {
-  const articleId = req.params.id;
+router.delete("/:code", requiresAuth(), async function (req, res, next) {
+  const articleCode = req.params.code;
   try {
-    await deleteArticle(articleId);
+    await deleteArticle(articleCode);
 
     var articles = res.locals.myCache.get("articles");
     if (articles !== undefined) {
-      const index = articles.findIndex((a) => a.id === parseInt(articleId));
+      const index = articles.findIndex((a) => a.codice === articleCode);
       if (index !== -1) {
         console.log("Artist removed from CACHE");
         articles.splice(index, 1);
@@ -171,20 +171,18 @@ router.delete("/:id", requiresAuth(), async function (req, res, next) {
   }
 });
 
-router.post("/:id/toggle", requiresAuth(), async function (req, res, next) {
-  const id = req.params.id;
+router.post("/:code/toggle", requiresAuth(), async function (req, res, next) {
+  const codice = req.params.code;
   const attivo = req.body.attivo;
 
   try {
-    const updatedArticle = await toggleArticle(id, attivo);
+    const updatedArticle = await toggleArticle(codice, attivo);
 
     var articles = res.locals.myCache.get("articles");
     if (articles === undefined) {
       articles = await getAllArticles();
     } else {
-      const index = articles.findIndex(
-        (article) => article.id === parseInt(id)
-      );
+      const index = articles.findIndex((article) => article.codice === codice);
       if (index !== -1) {
         console.log("Artist updated in CACHE");
         articles[index] = updatedArticle;
