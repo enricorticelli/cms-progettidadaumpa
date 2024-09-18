@@ -78,8 +78,16 @@ async function createArticle(
     }
 
     const result = await client.query(
-      `INSERT INTO articoli (codice, titolo, sottotitolo, contenuto, autore, immagine_url) VALUES ($1, $2, $3, $4, $5) RETURNING *;`,
-      [uniqueSlug, titolo, sottotitolo, contenuto, autore, immagine_url]
+      `INSERT INTO articoli (codice, titolo, sottotitolo, contenuto, autore, immagine_url, data_pubblicazione) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`,
+      [
+        uniqueSlug,
+        titolo,
+        sottotitolo,
+        contenuto,
+        autore,
+        immagine_url,
+        new Date(),
+      ]
     );
 
     const article = result.rows[0];

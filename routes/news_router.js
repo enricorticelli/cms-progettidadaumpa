@@ -36,7 +36,7 @@ router.get("/nuovo", requiresAuth(), async function (req, res, next) {
   const userName = req.oidc.user.name;
 
   const emptyArticle = {
-    id: "nuovo",
+    codice: "nuovo",
     titolo: "",
     sottotitolo: "",
     contenuto: "",
