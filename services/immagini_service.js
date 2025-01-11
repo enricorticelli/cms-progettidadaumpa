@@ -4,6 +4,7 @@ const sharp = require("sharp");
 const { formatDate } = require("../services/utils");
 const archiver = require("archiver");
 const fs = require("fs");
+const { PassThrough } = require("stream");
 
 async function getFilesData(bucket, options = {}) {
   const { prefix, ...restOptions } = options; // Extract prefix and other options
@@ -82,44 +83,63 @@ async function convertToWebP(buffer) {
 
 async function downloadFilesAsZip(res) {
   const zipFileName = "files.zip";
-  const zipFilePath = `${__dirname}/${zipFileName}`;
 
-  // Create a write stream to the zip file
-  const output = fs.createWriteStream(zipFilePath);
+  // Set response headers for file download
+  res.setHeader("Content-Disposition", `attachment; filename=${zipFileName}`);
+  res.setHeader("Content-Type", "application/zip");
+
   const archive = archiver("zip", {
     zlib: { level: 9 }, // Set compression level
   });
 
-  // Pipe the archive data to the output stream
-  archive.pipe(output);
+  // Stream the ZIP archive to the response
+  const passThrough = new PassThrough();
+  archive.pipe(passThrough);
+  passThrough.pipe(res);
 
-  var bucket = res.locals.bucket;
+  // Progress bar
+  let totalSize = 0;
+  let processedSize = 0;
 
-  // Add files to the archive
-  const filesData = await getFilesData(bucket);
-
-  for (const fileData of filesData) {
-    const file = bucket.file(fileData.filename);
-    const downloadStream = file.createReadStream();
-
-    // Add the file to the archive with a dynamic name
-    archive.append(downloadStream, { name: fileData.filename });
-  }
-
-  // Finalize the archive (writes the ZIP file)
-  archive.finalize();
-
-  // Wait for the write stream to finish and then send the ZIP file as response
-  output.on("close", () => {
-    setResponseHeadersForDownload(res, zipFileName);
-    const zipReadStream = fs.createReadStream(zipFilePath);
-    zipReadStream.pipe(res);
+  // Listen for the archive's `progress` event
+  archive.on("progress", (data) => {
+    processedSize = data.fs.processedBytes;
+    if (totalSize > 0) {
+      const progress = Math.round((processedSize / totalSize) * 100);
+      console.log(`Progress: ${progress}%`);
+      res.write(`Progress: ${progress}%\n`);
+    }
   });
 
-  output.on("error", (err) => {
-    console.error("Error creating ZIP file:", err);
+  // Error handling
+  archive.on("error", (err) => {
+    console.error("Error creating ZIP archive:", err);
     res.status(500).send("Internal Server Error");
   });
+
+  try {
+    const bucket = res.locals.bucket;
+
+    // Retrieve files and calculate total size
+    const filesData = await getFilesData(bucket);
+    for (const fileData of filesData) {
+      totalSize += fileData.size; // Assuming `fileData.size` provides file size
+    }
+
+    for (const fileData of filesData) {
+      const file = bucket.file(fileData.filename);
+      const downloadStream = file.createReadStream();
+
+      // Append the file to the archive
+      archive.append(downloadStream, { name: fileData.filename });
+    }
+
+    // Finalize the archive (writes the ZIP file)
+    await archive.finalize();
+  } catch (err) {
+    console.error("Error processing files:", err);
+    res.status(500).send("Internal Server Error");
+  }
 }
 
 function setResponseHeadersForDownload(res, filename) {

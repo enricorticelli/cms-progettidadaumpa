@@ -269,6 +269,7 @@ async function downloadImage(url) {
 }
 
 async function downloadZip() {
+  showLoading();
   try {
     const response = await fetch("./download-zip", {
       method: "GET",
@@ -295,6 +296,7 @@ async function downloadZip() {
   } catch (error) {
     console.error("Error downloading ZIP file:", error);
   }
+  hideLoading();
 }
 
 document.onreadystatechange = function () {

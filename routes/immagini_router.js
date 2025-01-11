@@ -26,9 +26,7 @@ router.get("/", requiresAuth(), async (req, res) => {
       res.locals.myCache.set("filesData", filesData);
     }
 
-    const firstTenFiles = filesData.slice(0, 10);
-
-    res.render("immagini", { files: firstTenFiles });
+    res.render("immagini", { files: filesData });
   } catch (error) {
     console.error("Error downloading all files:", error);
     res.status(500).send("Internal Server Error");
